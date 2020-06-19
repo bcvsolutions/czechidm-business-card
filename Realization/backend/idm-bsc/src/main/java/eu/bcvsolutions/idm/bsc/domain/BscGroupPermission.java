@@ -19,10 +19,10 @@ public enum BscGroupPermission implements GroupPermission {
 	/*
 	 * Define your group permission there and example permission you can remove
 	 */
-	EXAMPLEBSC(
+	BUSINESSCARD(
 			IdmBasePermission.ADMIN);
 
-	public static final String EXAMPLE_BSC_ADMIN = "EXAMPLEBSC" + BasePermission.SEPARATOR + "ADMIN";
+	public static final String BSC_BUSINESS_CARD_ADMIN = "BUSINESSCARD" + BasePermission.SEPARATOR + "ADMIN";
 
 	private final List<BasePermission> permissions;
 
