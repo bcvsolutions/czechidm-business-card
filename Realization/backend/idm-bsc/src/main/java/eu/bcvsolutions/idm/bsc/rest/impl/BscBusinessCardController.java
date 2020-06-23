@@ -32,7 +32,7 @@ import io.swagger.annotations.AuthorizationScope;
  */
 
 @RestController
-@RequestMapping(value = BaseController.BASE_PATH + "/business-cards")
+@RequestMapping(value = BaseController.BASE_PATH + "/identities/business-cards")
 @Api(
 		value = BscBusinessCardController.TAG,
 		tags = {BscBusinessCardController.TAG},
@@ -52,7 +52,7 @@ public class BscBusinessCardController implements BaseDtoController<BscBusinessC
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/{date}/{contractId}", method = RequestMethod.GET)
+	@RequestMapping(value = "/{backendId}/{date}/{contractId}", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + BscGroupPermission.BSC_BUSINESS_CARD_ADMIN + "')")
 	@ApiOperation(
 			value = "Business card detail for contract",
@@ -64,15 +64,17 @@ public class BscBusinessCardController implements BaseDtoController<BscBusinessC
 							@AuthorizationScope(scope = BscGroupPermission.BSC_BUSINESS_CARD_ADMIN, description = "")})
 			})
 	public ResponseEntity<?> getForContract(
+			@ApiParam(value = "Identity's identifier.", required = true)
+			@PathVariable @NotNull String backendId,
 			@ApiParam(value = "Date", required = true)
 			@PathVariable @NotNull String date,
 			@ApiParam(value = "Contract", required = true)
 			@PathVariable String contractId) {
-		return new ResponseEntity<>(businessCardService.getBusinessCard(date, contractId), HttpStatus.OK);
+		return new ResponseEntity<>(businessCardService.getBusinessCard(backendId, date, contractId), HttpStatus.OK);
 	}
 
 	@ResponseBody
-	@RequestMapping(value = "/{date}", method = RequestMethod.GET)
+	@RequestMapping(value = "/{backendId}/{date}", method = RequestMethod.GET)
 	@PreAuthorize("hasAuthority('" + BscGroupPermission.BSC_BUSINESS_CARD_ADMIN + "')")
 	@ApiOperation(
 			value = "Business card detail",
@@ -84,9 +86,11 @@ public class BscBusinessCardController implements BaseDtoController<BscBusinessC
 							@AuthorizationScope(scope = BscGroupPermission.BSC_BUSINESS_CARD_ADMIN, description = "")})
 			})
 	public ResponseEntity<?> get(
+			@ApiParam(value = "Identity's identifier.", required = true)
+			@PathVariable @NotNull String backendId,
 			@ApiParam(value = "Business card's uuid identifier.", required = true)
 			@PathVariable @NotNull String date) {
-		return new ResponseEntity<>(businessCardService.getBusinessCard(date, null), HttpStatus.OK);
+		return new ResponseEntity<>(businessCardService.getBusinessCard(backendId, date, null), HttpStatus.OK);
 	}
 
 	@ResponseBody

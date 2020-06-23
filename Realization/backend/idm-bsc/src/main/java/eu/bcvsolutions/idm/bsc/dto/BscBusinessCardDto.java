@@ -2,9 +2,7 @@ package eu.bcvsolutions.idm.bsc.dto;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.UUID;
 
-import eu.bcvsolutions.idm.core.api.domain.Embedded;
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
@@ -18,8 +16,7 @@ public class BscBusinessCardDto extends AbstractDto {
 
 	private ZonedDateTime date;
 
-	@Embedded(dtoClass = IdmIdentityContractDto.class)
-	private List<UUID> contracts;
+	private List<IdmIdentityContractDto> contracts;
 
 	private IdmFormInstanceDto formInstance;
 
@@ -32,7 +29,7 @@ public class BscBusinessCardDto extends AbstractDto {
 	 * @param contracts List of valid contracts
 	 * @param formInstance Form instance with values
 	 */
-	public BscBusinessCardDto(ZonedDateTime date, List<UUID> contracts, IdmFormInstanceDto formInstance) {
+	public BscBusinessCardDto(ZonedDateTime date, List<IdmIdentityContractDto> contracts, IdmFormInstanceDto formInstance) {
 		this.date = date;
 		this.contracts = contracts;
 		this.formInstance = formInstance;
@@ -46,11 +43,11 @@ public class BscBusinessCardDto extends AbstractDto {
 		this.date = date;
 	}
 
-	public List<UUID> getContracts() {
+	public List<IdmIdentityContractDto> getContracts() {
 		return contracts;
 	}
 
-	public void setContracts(List<UUID> contracts) {
+	public void setContracts(List<IdmIdentityContractDto> contracts) {
 		this.contracts = contracts;
 	}
 

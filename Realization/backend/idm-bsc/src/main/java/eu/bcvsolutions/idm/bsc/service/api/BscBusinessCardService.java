@@ -9,7 +9,7 @@ import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
 public interface BscBusinessCardService {
 	IdmFormInstanceDto getFormInstance();
 
-	BscBusinessCardDto getBusinessCard(String date, String contractId);
+	BscBusinessCardDto getBusinessCard(String identity ,String date, String contractId);
 
 	void printBusinessCard(BscBusinessCardDto dto);
 }

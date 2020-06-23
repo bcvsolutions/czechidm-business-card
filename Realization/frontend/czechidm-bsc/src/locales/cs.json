@@ -1,6 +1,19 @@
 {
   "module": {
-    "name": "Bsc modul",
+    "name": "CzechIdM Module for Business card",
     "author": "BCV solutions s.r.o."
+  },
+  "content": {
+    "business-card": {
+      "label": "Vizitky",
+      "title": "Vizitky",
+      "date": "Datum, ke kterému jsou úvazky platné"
+    },
+    "identity": {
+      "business-card": {
+        "header": "Vizitky",
+        "title": "Vizitky"
+      }
+    }
   }
 }

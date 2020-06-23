@@ -1,5 +1,13 @@
 package eu.bcvsolutions.idm.bsc.service.impl;
 
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import javax.annotation.Priority;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +15,16 @@ import org.springframework.stereotype.Service;
 
 import eu.bcvsolutions.idm.bsc.dto.BscBusinessCardDto;
 import eu.bcvsolutions.idm.bsc.service.api.BscBusinessCardService;
+import eu.bcvsolutions.idm.core.api.dto.BaseDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
+import eu.bcvsolutions.idm.core.api.service.IdmIdentityContractService;
+import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
+import eu.bcvsolutions.idm.core.eav.api.domain.PersistentType;
+import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormAttributeDto;
+import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormDefinitionDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
+import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormValueDto;
 
 /**
  * This service is used from {@Link BscBusinessCardController}
@@ -19,8 +36,13 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultBscBusinessCardService.class);
 
+	private final IdmIdentityContractService identityContractService;
+	private final IdmIdentityService identityService;
+
 	@Autowired
-	public DefaultBscBusinessCardService() {
+	public DefaultBscBusinessCardService(IdmIdentityContractService identityContractService, IdmIdentityService identityService) {
+		this.identityContractService = identityContractService;
+		this.identityService = identityService;
 	}
 
 	/**
@@ -29,7 +51,33 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	 */
 	@Override
 	public IdmFormInstanceDto getFormInstance() {
-		return new IdmFormInstanceDto();
+		IdmFormInstanceDto formInstanceDto = new IdmFormInstanceDto();
+
+		// TODO create attributes
+		IdmFormAttributeDto attributeDto = new IdmFormAttributeDto();
+		attributeDto.setCode("test");
+		attributeDto.setDefaultValue("some default value");
+		attributeDto.setPersistentType(PersistentType.SHORTTEXT);
+		attributeDto.setId(UUID.randomUUID());
+
+		// TODO create definition
+		IdmFormDefinitionDto definitionDto = new IdmFormDefinitionDto();
+		definitionDto.addFormAttribute(attributeDto);
+
+		// TODO create values
+		IdmFormValueDto valueDto = new IdmFormValueDto();
+		valueDto.setShortTextValue("Test value for attr");
+		valueDto.setFormAttribute(attributeDto.getId());
+		valueDto.setPersistentType(PersistentType.SHORTTEXT);
+
+		Map<String, BaseDto> embedded = new HashMap<>();
+		embedded.put("formAttribute", attributeDto);
+		valueDto.setEmbedded(embedded);
+
+		formInstanceDto.setFormDefinition(definitionDto);
+		formInstanceDto.setValues(Collections.singletonList(valueDto));
+
+		return formInstanceDto;
 	}
 
 	/**
@@ -38,8 +86,19 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	 * @param contractId If it's filled we will use this contract for default values, otherwise we will use main contract
 	 * @return Business card dto
 	 */
-	public BscBusinessCardDto getBusinessCard(String date, String contractId) {
-		return new BscBusinessCardDto();
+	@Override
+	public BscBusinessCardDto getBusinessCard(String identity, String date, String contractId) {
+		BscBusinessCardDto businessCardDto = new BscBusinessCardDto();
+		businessCardDto.setFormInstance(getFormInstance());
+		businessCardDto.setDate(ZonedDateTime.now());
+
+		// TODO lookup by id or username
+		IdmIdentityDto idmIdentityDto = identityService.getByUsername(identity);
+		LocalDate localDate = LocalDate.parse(date);
+		List<IdmIdentityContractDto> allValidForDate = identityContractService.findAllValidForDate(idmIdentityDto.getId(), localDate, false);
+		businessCardDto.setContracts(allValidForDate);
+
+		return businessCardDto;
 	}
 
 	/**
