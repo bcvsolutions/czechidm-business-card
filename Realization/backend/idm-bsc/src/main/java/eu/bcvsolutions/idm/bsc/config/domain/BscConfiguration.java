@@ -3,8 +3,10 @@ package eu.bcvsolutions.idm.bsc.config.domain;
 import java.util.ArrayList;
 import java.util.List;
 
+import eu.bcvsolutions.idm.bsc.BscModuleDescriptor;
 import eu.bcvsolutions.idm.core.api.script.ScriptEnabled;
 import eu.bcvsolutions.idm.core.api.service.Configurable;
+import eu.bcvsolutions.idm.core.api.service.ConfigurationService;
 
 /**
  * Bsc configuration - interface
@@ -12,6 +14,16 @@ import eu.bcvsolutions.idm.core.api.service.Configurable;
  * @author Roman Kucera
  */
 public interface BscConfiguration extends Configurable, ScriptEnabled {
+
+	String PRIVATE_PREFIX_CONFIGURATION_BSC = ConfigurationService.IDM_PRIVATE_PROPERTY_PREFIX +
+			BscModuleDescriptor.MODULE_ID + ConfigurationService.PROPERTY_SEPARATOR + "configuration" + ConfigurationService.PROPERTY_SEPARATOR;
+
+	/**
+	 * Property with id for tree type where is stored clinics
+	 */
+	String SAVE_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "save.path";
+
+	String getSavePath();
 
 	@Override
 	default String getConfigurableType() {

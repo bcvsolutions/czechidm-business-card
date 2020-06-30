@@ -37,4 +37,40 @@ export default class BscBusinessCardManager extends Managers.DataManager {
           });
     };
   }
+
+  /**
+   * Get data for user and date and contract
+   */
+  fetchBackendForDateAndContract(entityId, date, contractId, uiKey = null, cb = null) {
+    return (dispatch) => {
+      this.getService().getBackendForDateAndContract(entityId, date, contractId)
+          .then(json => {
+            if (cb) {
+              cb(json, null);
+            }
+            dispatch(this.dataManager.receiveData(uiKey, json));
+          })
+          .catch(error => {
+            dispatch(this.receiveError({}, uiKey, error, cb));
+          });
+    };
+  }
+
+  /**
+   * Generate business card
+   */
+  generateBusinessCard(entity, uiKey = null, cb = null) {
+    return (dispatch) => {
+      this.getService().generateBusinessCard(entity)
+          .then(json => {
+            if (cb) {
+              cb(json, null);
+            }
+            // dispatch(this.dataManager.receiveData(uiKey, json));
+          })
+          .catch(error => {
+            dispatch(this.receiveError({}, uiKey, error, cb));
+          });
+    };
+  }
 }

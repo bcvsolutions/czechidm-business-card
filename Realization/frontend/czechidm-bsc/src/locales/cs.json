@@ -7,12 +7,35 @@
     "business-card": {
       "label": "Vizitky",
       "title": "Vizitky",
-      "date": "Datum, ke kterému jsou úvazky platné"
+      "date": "Datum, ke kterému jsou úvazky platné",
+      "contract": "Úvazky",
+      "button": {
+        "generate": "Vytvořit vizitku"
+      },
+      "generate": {
+        "header": "Tvorba vizitky",
+        "message": "Opravdu chcete vytvořit vizitku?"
+      }
     },
     "identity": {
       "business-card": {
         "header": "Vizitky",
         "title": "Vizitky"
+      }
+    }
+  },
+  "eav": {
+    "bulk-action": {
+      "bsc-identity-business-card-bulk-action": {
+        "label": "Generovat vizitky",
+        "help": "Vygeneruje vizitky pro vybrané uživatele",
+        "icon": "fa:address-card-o",
+        "attributes": {
+          "save-to-hdd": {
+            "label": "Uložit na sdílený disk",
+            "help": "Pdf bude také uloženo na sdílený disk."
+          }
+        }
       }
     }
   }

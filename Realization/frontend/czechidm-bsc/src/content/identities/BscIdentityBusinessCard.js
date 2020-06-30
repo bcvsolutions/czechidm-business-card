@@ -23,7 +23,7 @@ export default class BscIdentityBusinessCard extends Basic.AbstractContent {
           <Basic.Panel className="no-border last">
             <BscIdentityBusinessCardTable
                 uiKey="bsc-identity-business-card"
-                entityId={this.props.params.entityId}/>
+                entityId={this.props.match.params.entityId}/>
           </Basic.Panel>
         </div>
     );

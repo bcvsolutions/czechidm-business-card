@@ -14,4 +14,8 @@ import eu.bcvsolutions.idm.core.api.config.domain.AbstractConfiguration;
 public class DefaultBscConfiguration
 		extends AbstractConfiguration
 		implements BscConfiguration {
+	@Override
+	public String getSavePath() {
+		return getConfigurationService().getValue(SAVE_PATH);
+	}
 }

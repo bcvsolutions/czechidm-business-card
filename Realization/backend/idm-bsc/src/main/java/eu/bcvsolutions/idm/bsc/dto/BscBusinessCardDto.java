@@ -1,10 +1,9 @@
 package eu.bcvsolutions.idm.bsc.dto;
 
 import java.time.ZonedDateTime;
-import java.util.List;
+import java.util.Map;
 
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
-import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
 
 /**
@@ -16,9 +15,13 @@ public class BscBusinessCardDto extends AbstractDto {
 
 	private ZonedDateTime date;
 
-	private List<IdmIdentityContractDto> contracts;
+	private Map<String, String> contracts;
 
 	private IdmFormInstanceDto formInstance;
+
+	private String userId;
+
+	private String selectedContract;
 
 	public BscBusinessCardDto() {
 	}
@@ -29,7 +32,7 @@ public class BscBusinessCardDto extends AbstractDto {
 	 * @param contracts List of valid contracts
 	 * @param formInstance Form instance with values
 	 */
-	public BscBusinessCardDto(ZonedDateTime date, List<IdmIdentityContractDto> contracts, IdmFormInstanceDto formInstance) {
+	public BscBusinessCardDto(ZonedDateTime date, Map<String, String> contracts, IdmFormInstanceDto formInstance) {
 		this.date = date;
 		this.contracts = contracts;
 		this.formInstance = formInstance;
@@ -43,11 +46,11 @@ public class BscBusinessCardDto extends AbstractDto {
 		this.date = date;
 	}
 
-	public List<IdmIdentityContractDto> getContracts() {
+	public Map<String, String> getContracts() {
 		return contracts;
 	}
 
-	public void setContracts(List<IdmIdentityContractDto> contracts) {
+	public void setContracts(Map<String, String> contracts) {
 		this.contracts = contracts;
 	}
 
@@ -57,5 +60,21 @@ public class BscBusinessCardDto extends AbstractDto {
 
 	public void setFormInstance(IdmFormInstanceDto formInstance) {
 		this.formInstance = formInstance;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+	public String getSelectedContract() {
+		return selectedContract;
+	}
+
+	public void setSelectedContract(String selectedContract) {
+		this.selectedContract = selectedContract;
 	}
 }

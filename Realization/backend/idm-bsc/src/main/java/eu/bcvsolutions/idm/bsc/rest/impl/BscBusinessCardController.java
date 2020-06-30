@@ -4,6 +4,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -105,8 +106,7 @@ public class BscBusinessCardController implements BaseDtoController<BscBusinessC
 					@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = {
 							@AuthorizationScope(scope = BscGroupPermission.BSC_BUSINESS_CARD_ADMIN, description = "")})
 			})
-	public ResponseEntity<?> post(@Valid @RequestBody BscBusinessCardDto dto) {
-		businessCardService.printBusinessCard(dto);
-		return new ResponseEntity<>(HttpStatus.OK);
+	public ResponseEntity<InputStreamResource> post(@Valid @RequestBody BscBusinessCardDto dto) {
+		return businessCardService.printBusinessCard(dto);
 	}
 }
