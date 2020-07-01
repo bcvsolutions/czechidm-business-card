@@ -9,8 +9,10 @@
       "title": "Business card",
       "date": "Date, for which are contracts valid",
       "contract": "Contracts",
+      "form-attribute-name": "Jméno",
       "button": {
-        "generate": "Create business card"
+        "generate": "Create business card",
+        "edit": "Edit record"
       },
       "generate": {
         "header": "Creation of business card",
@@ -36,6 +38,40 @@
             "help": "It will save pdf also to shared drive."
           }
         }
+      }
+    },
+    "eu-bcvsolutions-idm-bsc-dto-bscbusinesscarddto": {
+      "bsc": {
+        "attributes": {
+          "name": {
+            "label": "Full name"
+          },
+          "titlesbefore": {
+            "label": "Titles before name"
+          },
+          "titlesafter": {
+            "label": "Titles after name"
+          },
+          "department": {
+            "label": "Department"
+          },
+          "position": {
+            "label": "Position"
+          },
+          "personalnumber": {
+            "label": "Personal number"
+          },
+          "savetohdd": {
+            "label": "Save to shared drive"
+          }
+        }
+      }
+    }
+  },
+  "validation": {
+    "org": {
+      "eav": {
+        "error": "Text can have 4 rows max."
       }
     }
   }

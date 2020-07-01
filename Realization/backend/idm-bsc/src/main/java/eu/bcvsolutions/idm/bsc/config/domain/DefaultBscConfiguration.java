@@ -18,4 +18,9 @@ public class DefaultBscConfiguration
 	public String getSavePath() {
 		return getConfigurationService().getValue(SAVE_PATH);
 	}
+
+	@Override
+	public String getBckPath() {
+		return getConfigurationService().getValue(BCK_PATH);
+	}
 }

@@ -5,23 +5,24 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
-import javax.annotation.Priority;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 
+import eu.bcvsolutions.idm.bsc.BscModuleDescriptor;
+import eu.bcvsolutions.idm.bsc.config.domain.BscConfiguration;
 import eu.bcvsolutions.idm.bsc.dto.BscBusinessCardDto;
 import eu.bcvsolutions.idm.bsc.report.BscIdentityBusinessCardExport;
 import eu.bcvsolutions.idm.bsc.service.api.BscBusinessCardService;
@@ -30,13 +31,16 @@ import eu.bcvsolutions.idm.core.api.bulk.action.dto.IdmBulkActionDto;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmTreeNodeDto;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityContractService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
+import eu.bcvsolutions.idm.core.eav.api.domain.BaseFaceType;
 import eu.bcvsolutions.idm.core.eav.api.domain.PersistentType;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormAttributeDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormDefinitionDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormValueDto;
+import eu.bcvsolutions.idm.core.eav.api.service.FormService;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentity;
 
 /**
@@ -44,15 +48,20 @@ import eu.bcvsolutions.idm.core.model.entity.IdmIdentity;
  *
  * @author Roman Kucera
  */
-@Service("businessCardService")
-@Priority(0)
 public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultBscBusinessCardService.class);
 
-	private final IdmIdentityContractService identityContractService;
-	private final IdmIdentityService identityService;
-	private final BulkActionManager bulkActionManager;
+	@Autowired
+	protected IdmIdentityContractService identityContractService;
+	@Autowired
+	protected IdmIdentityService identityService;
+	@Autowired
+	protected BulkActionManager bulkActionManager;
+	@Autowired
+	protected BscConfiguration bscConfiguration;
+	@Autowired
+	protected FormService formService;
 
 	private String nameAttrName = "name";
 	private String titlesBeforeAttrName = "titlesBefore";
@@ -65,10 +74,7 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	private String embeddedFormAttrName = "formAttribute";
 
 	@Autowired
-	public DefaultBscBusinessCardService(IdmIdentityContractService identityContractService, IdmIdentityService identityService, BulkActionManager bulkActionManager) {
-		this.identityContractService = identityContractService;
-		this.identityService = identityService;
-		this.bulkActionManager = bulkActionManager;
+	public DefaultBscBusinessCardService() {
 	}
 
 	/**
@@ -82,13 +88,14 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	public IdmFormInstanceDto getFormInstance(IdmIdentityDto identityDto, String contractId) {
 		IdmFormInstanceDto formInstanceDto = new IdmFormInstanceDto();
 
-		IdmFormAttributeDto nameAttr = getFormAttr(nameAttrName, false);
-		IdmFormAttributeDto titlesBeforeAttr = getFormAttr(titlesBeforeAttrName, false);
-		IdmFormAttributeDto titlesAfterAttr = getFormAttr(titlesAfterAttrName, false);
-		IdmFormAttributeDto departmentAttr = getFormAttr(departmentAttrName, false);
-		IdmFormAttributeDto positionAttr = getFormAttr(positionAttrName, false);
-		IdmFormAttributeDto personalNumberAttr = getFormAttr(personalNumberAttrName, false);
-		IdmFormAttributeDto saveToHddAttr = getFormAttr(saveToHddAttrName, false);
+		IdmFormAttributeDto nameAttr = getFormAttr(nameAttrName, false, PersistentType.SHORTTEXT);
+		IdmFormAttributeDto titlesBeforeAttr = getFormAttr(titlesBeforeAttrName, false, PersistentType.SHORTTEXT);
+		IdmFormAttributeDto titlesAfterAttr = getFormAttr(titlesAfterAttrName, false, PersistentType.SHORTTEXT);
+		IdmFormAttributeDto departmentAttr = getFormAttr(departmentAttrName, true, PersistentType.TEXT);
+		departmentAttr.setFaceType(BaseFaceType.TEXTAREA);
+		IdmFormAttributeDto positionAttr = getFormAttr(positionAttrName, false, PersistentType.SHORTTEXT);
+		IdmFormAttributeDto personalNumberAttr = getFormAttr(personalNumberAttrName, false, PersistentType.SHORTTEXT);
+		IdmFormAttributeDto saveToHddAttr = getFormAttr(saveToHddAttrName, false, PersistentType.BOOLEAN);
 
 		IdmFormDefinitionDto definitionDto = new IdmFormDefinitionDto();
 		definitionDto.addFormAttribute(nameAttr);
@@ -98,20 +105,32 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		definitionDto.addFormAttribute(positionAttr);
 		definitionDto.addFormAttribute(personalNumberAttr);
 		definitionDto.addFormAttribute(saveToHddAttr);
+		definitionDto.setModule(BscModuleDescriptor.MODULE_ID);
+		definitionDto.setType(BscBusinessCardDto.class.getName());
+		definitionDto.setCode(BscModuleDescriptor.MODULE_ID);
 
 		IdmFormValueDto nameValue = getStringValue(nameAttr, identityDto.getFirstName() + " " + identityDto.getLastName());
 		IdmFormValueDto titlesBeforeValue = getStringValue(titlesBeforeAttr, identityDto.getTitleBefore());
 		IdmFormValueDto titlesAfterValue = getStringValue(titlesAfterAttr, identityDto.getTitleAfter());
-		IdmFormValueDto departmentValue = getStringValue(departmentAttr, "");
 
+
+		String department = "";
 		String position = "";
 		if (!StringUtils.isBlank(contractId)) {
 			IdmIdentityContractDto contractDto = identityContractService.get(contractId);
 			if (contractDto != null && !StringUtils.isBlank(contractDto.getPosition())) {
 				position = contractDto.getPosition();
 			}
+			if (contractDto != null && contractDto.getWorkPosition() != null) {
+				// get department from eav
+				Optional<IdmFormValueDto> value = formService.getValues(contractDto.getWorkPosition(), IdmTreeNodeDto.class, "businessCardName").stream().findFirst();
+				if (value.isPresent()) {
+					department = value.get().getStringValue();
+				}
+			}
 		}
 
+		IdmFormValueDto departmentValue = getStringValue(departmentAttr, department);
 		IdmFormValueDto positionValue = getStringValue(positionAttr, position);
 		IdmFormValueDto personalNumberValue = getStringValue(personalNumberAttr, identityDto.getExternalCode());
 		IdmFormValueDto saveToHddValue = getBoolValue(saveToHddAttr, true);
@@ -149,10 +168,10 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		return nameValue;
 	}
 
-	protected IdmFormAttributeDto getFormAttr(String code, boolean isReadOnly) {
+	protected IdmFormAttributeDto getFormAttr(String code, boolean isReadOnly, PersistentType type) {
 		IdmFormAttributeDto attributeDto = new IdmFormAttributeDto();
 		attributeDto.setCode(code);
-		attributeDto.setPersistentType(PersistentType.SHORTTEXT);
+		attributeDto.setPersistentType(type);
 		attributeDto.setId(UUID.randomUUID());
 		attributeDto.setReadonly(isReadOnly);
 		return attributeDto;
@@ -172,16 +191,20 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		IdmIdentityDto idmIdentityDto = identityService.getByUsername(identity);
 		LocalDate localDate = LocalDate.parse(date);
 		List<IdmIdentityContractDto> allValidForDate = identityContractService.findAllValidForDate(idmIdentityDto.getId(), localDate, false);
+		allValidForDate.sort(Comparator.comparing(IdmIdentityContractDto::getPosition));
 		Map<String, String> contracts = new LinkedHashMap<>();
 		allValidForDate.forEach(idmIdentityContractDto -> {
 			String niceLabel = idmIdentityContractDto.getPosition() + " - " + idmIdentityContractDto.getValidFrom()
 					+ " - " + idmIdentityContractDto.getValidTill();
 			contracts.put(idmIdentityContractDto.getId().toString(), niceLabel);
 		});
+
+
 		BscBusinessCardDto businessCardDto = new BscBusinessCardDto();
 		if (StringUtils.isBlank(contractId) && !allValidForDate.isEmpty()) {
 			contractId = allValidForDate.get(0).getId().toString();
 		}
+		businessCardDto.setSelectedContract(contractId);
 		businessCardDto.setFormInstance(getFormInstance(idmIdentityDto, contractId));
 		businessCardDto.setDate(localDate.atStartOfDay(ZoneId.systemDefault()));
 
@@ -197,22 +220,10 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	 * @return
 	 */
 	@Override
-	public ResponseEntity<InputStreamResource> printBusinessCard(BscBusinessCardDto dto) {
+	public ResponseEntity<IdmBulkActionDto> printBusinessCard(BscBusinessCardDto dto) {
 		LOG.info("We will generate business card");
 
-		Map<Object, Object> params = new HashMap<>();
-
-		IdmFormInstanceDto formInstance = dto.getFormInstance();
-		Map<UUID, IdmFormAttributeDto> attributes = formInstance.getFormDefinition().getFormAttributes()
-				.stream()
-				.collect(Collectors.toMap(IdmFormAttributeDto::getId, attr -> attr));
-
-		transformAttrsToMap(params, formInstance, attributes);
-
-		// TODO make configurable
-		params.put("imagePath", "profile.png");
-		params.put("nameSize", ((String) params.getOrDefault(nameAttrName, "") + params.getOrDefault(titlesAfterAttrName, "") +
-				params.getOrDefault(titlesBeforeAttrName, "")).length() > 38 ? "8.6pt" : "11pt");
+		Map<String, Object> params = prepareAndTransformData(dto);
 
 		// RUN REPORT
 		IdmBulkActionDto bulkActionDto = bulkActionManager.getAvailableActions(IdmIdentity.class).
@@ -223,19 +234,50 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		if (bulkActionDto != null) {
 			// TODO lookup by id or username
 			IdmIdentityDto idmIdentityDto = identityService.getByUsername(dto.getUserId());
-			Set<UUID> ids = Collections.singleton(idmIdentityDto.getId());
-			bulkActionDto.setIdentifiers(ids);
-
-			Map<String, Object> properties = new HashMap<>();
-			properties.put(BscIdentityBusinessCardExport.BUSINESS_CARD_CODE, params);
-			bulkActionDto.setProperties(properties);
-			IdmBulkActionDto processAction = bulkActionManager.processAction(bulkActionDto);
-			LOG.info("bulk action: " + processAction);
+			bulkActionDto = prepareAndRunBulkAction(idmIdentityDto.getId(), bulkActionDto, params);
+			return new ResponseEntity<>(bulkActionDto, HttpStatus.OK);
 		}
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-	private void transformAttrsToMap(Map<Object, Object> params, IdmFormInstanceDto formInstance, Map<UUID, IdmFormAttributeDto> attributes) {
+	protected IdmBulkActionDto prepareAndRunBulkAction(UUID userId, IdmBulkActionDto bulkActionDto, Map<String, Object> params) {
+		Set<UUID> ids = Collections.singleton(userId);
+		bulkActionDto.setIdentifiers(ids);
+
+		Map<String, Object> properties = new HashMap<>();
+		properties.put(BscIdentityBusinessCardExport.BUSINESS_CARD_CODE, params);
+		properties.put(BscIdentityBusinessCardExport.SAVE_TO_HDD_CODE, params.get(saveToHddAttrName));
+		bulkActionDto.setProperties(properties);
+		bulkActionDto = bulkActionManager.processAction(bulkActionDto);
+		LOG.info("bulk action: " + bulkActionDto);
+		return bulkActionDto;
+	}
+
+	@Override
+	public Map<String, Object> prepareAndTransformData(BscBusinessCardDto dto) {
+		Map<String, Object> params = new HashMap<>();
+
+		transformAttrsToMap(params, dto);
+
+		// TODO make configurable
+		params.put("imagePath", "profile.png");
+		params.put("nameSize", ((String) params.getOrDefault(nameAttrName, "") + params.getOrDefault(titlesAfterAttrName, "") +
+				params.getOrDefault(titlesBeforeAttrName, "")).length() > 38 ? "8.6pt" : "11pt");
+
+		String bckPath = bscConfiguration.getBckPath();
+		if (!StringUtils.isBlank(bckPath)) {
+			params.put("backgroundImage", bckPath + "\\defaulBck.png");
+		}
+
+		return params;
+	}
+
+	protected void transformAttrsToMap(Map<String, Object> params, BscBusinessCardDto dto) {
+		IdmFormInstanceDto formInstance = dto.getFormInstance();
+		Map<UUID, IdmFormAttributeDto> attributes = formInstance.getFormDefinition().getFormAttributes()
+				.stream()
+				.collect(Collectors.toMap(IdmFormAttributeDto::getId, attr -> attr));
+
 		formInstance.getValues().forEach(idmFormValueDto -> {
 			IdmFormAttributeDto attr = attributes.getOrDefault(idmFormValueDto.getFormAttribute(), null);
 			if (attr == null) {
@@ -250,6 +292,14 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 			} else if (attr.getCode().equals(titlesAfterAttrName)) {
 				if (!StringUtils.isEmpty(idmFormValueDto.getShortTextValue())) {
 					params.put(attr.getCode(), ", " + idmFormValueDto.getShortTextValue());
+				}
+			} else if (attr.getCode().equals(departmentAttrName)) {
+				if (!StringUtils.isEmpty(idmFormValueDto.getStringValue())) {
+					AtomicInteger suffix = new AtomicInteger(1);
+					Arrays.asList(idmFormValueDto.getStringValue().split("\\n")).forEach(s -> {
+						params.put("department" + suffix, s);
+						suffix.getAndIncrement();
+					});
 				}
 			} else {
 				params.put(attr.getCode(), idmFormValueDto.getShortTextValue());

@@ -1,28 +1,19 @@
 package eu.bcvsolutions.idm.bsc.report;
 
-import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
-import eu.bcvsolutions.idm.bsc.config.domain.BscConfiguration;
 import eu.bcvsolutions.idm.bsc.templates.FOPProcessor;
-import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
-import eu.bcvsolutions.idm.core.api.exception.ResultCodeException;
 import eu.bcvsolutions.idm.rpt.api.dto.RptReportDto;
 import eu.bcvsolutions.idm.rpt.api.renderer.RendererRegistrar;
 
@@ -39,52 +30,36 @@ public class BscIdentityPdfRenderer extends BscAbstractPdfRenderer implements Re
 
 	public static final String NAME = "bsc-identity-pdf-renderer";
 
-	@Autowired
-	private BscConfiguration bscConfiguration;
-
 	@Override
 	@SuppressWarnings("unchecked")
 	public InputStream render(RptReportDto report) {
 		try (JsonParser jParser = getMapper().getFactory().createParser(getReportData(report))) {
 			int rowNum = 0;
 			//
-			byte[] bytes = new byte[0];
-			if (jParser.nextToken() == JsonToken.START_ARRAY && jParser.nextToken() == JsonToken.START_OBJECT) {
+			if (jParser.nextToken() == JsonToken.START_ARRAY) {
+				List<File> partialFiles = new ArrayList();
 				// write single entity
 				// TODO check when this will run for multiple users
-//				while (jParser.nextToken() == JsonToken.START_OBJECT) {
-					Map<String, Object> item = getMapper().readValue(jParser, Map.class);
-
-					try {
-						bytes = new FOPProcessor().generateByteA("fop-businessCard", item, "cs");
-					} catch (IOException e) {
-						LOG.error("Not able to load template", e);
+				while (jParser.nextToken() == JsonToken.START_OBJECT) {
+					BscBusinessCardReportDto item = getMapper().readValue(jParser, BscBusinessCardReportDto.class);
+					jParser.finishToken();
+					if (item.getPdf() != null) {
+						partialFiles.add(item.getPdf());
 					}
-					try (InputStream is = new ByteArrayInputStream(bytes)) {
-						String mimeType = "application/pdf";
-						ResponseEntity.BodyBuilder response = ResponseEntity
-								.ok()
-								.contentLength(is.available())
-								.header(HttpHeaders.CONTENT_DISPOSITION, String.format("inline; filename=\"%s\"", "vizitka"));
-						// append media type, if it's filled
-						if (StringUtils.isNotBlank(mimeType)) {
-							response = response.contentType(MediaType.valueOf(mimeType));
-						}
-
-						//
-						if ((boolean) item.getOrDefault("saveToHdd", false)) {
-							LOG.info("Save to disk");
-							saveToHdd(bytes);
-						}
-					} catch (IOException e) {
-						throw new ResultCodeException(CoreResultCode.INTERNAL_SERVER_ERROR, e);
-					}
-//				}
+				}
+				byte[] bytes;
+				try {
+					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+					new FOPProcessor().concatToPDF(partialFiles, outputStream);
+					bytes = outputStream.toByteArray();
+					outputStream.close();
+					return getInputStream(bytes);
+				} catch (Exception ex) {
+					LOG.error("An error occurred while generating business card.", ex);
+				}
 			}
-			// close and return input stream
-			return getInputStream(bytes);
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOG.error("Error during rendering", e);
 		}
 		return null;
 	}
@@ -102,16 +77,4 @@ public class BscIdentityPdfRenderer extends BscAbstractPdfRenderer implements Re
 		return NAME;
 	}
 
-	private void saveToHdd(byte[] bytes) {
-		String savePath = bscConfiguration.getSavePath();
-		if (!StringUtils.isBlank(savePath)) {
-			// TODO add some date suffix
-			File targetFile = new File(savePath);
-			try (OutputStream outStream = new FileOutputStream(targetFile)) {
-				outStream.write(bytes);
-			} catch (IOException e) {
-				LOG.error("Can't write to file", e);
-			}
-		}
-	}
 }

@@ -22,8 +22,11 @@ public interface BscConfiguration extends Configurable, ScriptEnabled {
 	 * Property with id for tree type where is stored clinics
 	 */
 	String SAVE_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "save.path";
+	String BCK_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "bck.path";
 
 	String getSavePath();
+
+	String getBckPath();
 
 	@Override
 	default String getConfigurableType() {

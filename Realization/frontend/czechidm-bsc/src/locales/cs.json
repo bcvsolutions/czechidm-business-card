@@ -10,7 +10,8 @@
       "date": "Datum, ke kterému jsou úvazky platné",
       "contract": "Úvazky",
       "button": {
-        "generate": "Vytvořit vizitku"
+        "generate": "Vytvořit vizitku",
+        "edit": "Editovat záznam"
       },
       "generate": {
         "header": "Tvorba vizitky",
@@ -36,6 +37,40 @@
             "help": "Pdf bude také uloženo na sdílený disk."
           }
         }
+      }
+    },
+    "eu-bcvsolutions-idm-bsc-dto-bscbusinesscarddto": {
+      "bsc": {
+        "attributes": {
+          "name": {
+            "label": "Celé jméno"
+          },
+          "titlesbefore": {
+            "label": "Tituly před jménem"
+          },
+          "titlesafter": {
+            "label": "Tituly za jménem"
+          },
+          "department": {
+            "label": "Oddělení"
+          },
+          "position": {
+            "label": "Pozice"
+          },
+          "personalnumber": {
+            "label": "Osobní číslo"
+          },
+          "savetohdd": {
+            "label": "Uložit na sdílený disk"
+          }
+        }
+      }
+    }
+  },
+  "validation": {
+    "org": {
+      "eav": {
+        "error": "Text může mít maximálně 4 řádky."
       }
     }
   }

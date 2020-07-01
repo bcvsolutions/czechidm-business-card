@@ -60,7 +60,7 @@
                     <fo:block-container absolute-position="absolute"
                                         left="0mm" top="-0.5mm" width="84mm" height="53mm">
                         <fo:block>
-                            <fo:external-graphic src="{params/backgroundImage}"
+                            <fo:external-graphic src="url(file:/{params/backgroundImage})"
                                                  content-width="84mm"
                                                  content-height="53mm"
                                                  scaling="non-uniform"/>

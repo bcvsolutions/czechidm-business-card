@@ -4,7 +4,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import eu.bcvsolutions.idm.bsc.domain.BscGroupPermission;
 import eu.bcvsolutions.idm.bsc.dto.BscBusinessCardDto;
 import eu.bcvsolutions.idm.bsc.service.api.BscBusinessCardService;
+import eu.bcvsolutions.idm.core.api.bulk.action.dto.IdmBulkActionDto;
 import eu.bcvsolutions.idm.core.api.config.swagger.SwaggerConfig;
 import eu.bcvsolutions.idm.core.api.rest.BaseController;
 import eu.bcvsolutions.idm.core.api.rest.BaseDtoController;
@@ -100,13 +100,13 @@ public class BscBusinessCardController implements BaseDtoController<BscBusinessC
 	@ApiOperation(
 			value = "Print Business card",
 			nickname = "postBusinessCard",
-			response = BscBusinessCardDto.class,
+			response = IdmBulkActionDto.class,
 			tags = {BscBusinessCardController.TAG},
 			authorizations = {
 					@Authorization(value = SwaggerConfig.AUTHENTICATION_BASIC, scopes = {
 							@AuthorizationScope(scope = BscGroupPermission.BSC_BUSINESS_CARD_ADMIN, description = "")})
 			})
-	public ResponseEntity<InputStreamResource> post(@Valid @RequestBody BscBusinessCardDto dto) {
+	public ResponseEntity<IdmBulkActionDto> post(@Valid @RequestBody BscBusinessCardDto dto) {
 		return businessCardService.printBusinessCard(dto);
 	}
 }

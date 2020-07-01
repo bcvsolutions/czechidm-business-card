@@ -1,18 +1,24 @@
 package eu.bcvsolutions.idm.bsc.report;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.MessageFormat;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +28,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
+import eu.bcvsolutions.idm.bsc.config.domain.BscConfiguration;
 import eu.bcvsolutions.idm.bsc.domain.BscGroupPermission;
+import eu.bcvsolutions.idm.bsc.dto.BscBusinessCardDto;
+import eu.bcvsolutions.idm.bsc.service.api.BscBusinessCardService;
+import eu.bcvsolutions.idm.bsc.templates.FOPProcessor;
 import eu.bcvsolutions.idm.core.CoreModuleDescriptor;
 import eu.bcvsolutions.idm.core.api.bulk.action.AbstractBulkAction;
 import eu.bcvsolutions.idm.core.api.domain.CoreResultCode;
@@ -54,6 +64,8 @@ import eu.bcvsolutions.idm.rpt.api.service.RptReportService;
 @Description("Generate business card")
 public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentityDto, IdmIdentityFilter> {
 
+	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(BscIdentityBusinessCardExport.class);
+
 	public static final String REPORT_NAME = "bsc-identity-business-card-bulk-action";
 
 	public static final String SAVE_TO_HDD_CODE = "save-to-hdd";
@@ -62,13 +74,21 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	private final RptReportService reportService;
 	private final AttachmentManager attachmentManager;
 	private final ObjectMapper mapper;
+
 	//
 	private File tempFile;
 	private JsonGenerator jsonGenerator;
 	private UUID relatedReport;
 
+	List<File> partialFiles = new ArrayList();
+
 	@Autowired
 	private IdmIdentityService identityService;
+	@Autowired
+	private BscConfiguration bscConfiguration;
+	@Autowired
+	@Lazy
+	private BscBusinessCardService businessCardService;
 
 	public BscIdentityBusinessCardExport(RptReportService reportService,
 										 AttachmentManager attachmentManager, ObjectMapper mapper) {
@@ -93,17 +113,32 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	protected OperationResult processDto(IdmIdentityDto dto) {
 		Map<String, Object> properties = getProperties();
 		if (properties.get(BUSINESS_CARD_CODE) == null) {
-			// TODO calculate properties via BusinessCardService
+			// TODO load properties
+			BscBusinessCardDto businessCard = businessCardService.getBusinessCard(dto.getUsername(), LocalDate.now().toString(), null);
+			properties = businessCardService.prepareAndTransformData(businessCard);
 		} else {
 			properties = (Map<String, Object>) properties.get(BUSINESS_CARD_CODE);
 		}
 
 		final OperationResult result = new OperationResult();
-		//
-		//
+
+		//Generate partial pdf
+		File pf = null;
 		try {
+			pf = new FOPProcessor().convertToAreaTreeXML("fop-businessCard", "cs", properties);
+			partialFiles.add(pf);
+		} catch (IOException e) {
+			LOG.error("Not able to load template", e);
+		}
+
+		try {
+			BscBusinessCardReportDto businessCardReportDto = new BscBusinessCardReportDto();
+			businessCardReportDto.setUserIdentifier(dto.getId());
+			businessCardReportDto.setPdf(pf);
+			businessCardReportDto.setParams(properties);
+
 			final JsonGenerator jGen = getJsonGenerator();
-			jGen.writeObject(properties);
+			jGen.writeObject(businessCardReportDto);
 			result.setState(OperationState.EXECUTED);
 		} catch (IOException e) {
 			result.setState(OperationState.EXCEPTION);
@@ -115,6 +150,13 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 
 	@Override
 	protected OperationResult end(OperationResult result, Exception ex) {
+		// Save pdf to disk
+		Boolean saveToHdd = (Boolean) getProperties().getOrDefault(SAVE_TO_HDD_CODE, false);
+		if (saveToHdd != null && saveToHdd) {
+			LOG.info("Save to disk");
+			saveToHdd();
+		}
+
 		final OperationResult superResult = super.end(result, ex);
 		if (!close()) {
 			superResult.setState(OperationState.EXCEPTION);
@@ -239,5 +281,24 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	@Override
 	public String getName() {
 		return REPORT_NAME;
+	}
+
+	private void saveToHdd() {
+		String savePath = bscConfiguration.getSavePath();
+		if (!StringUtils.isBlank(savePath)) {
+			byte[] bytes = null;
+			// TODO add some date suffix
+			File targetFile = new File(savePath);
+			try (OutputStream outStream = new FileOutputStream(targetFile)) {
+				ByteArrayOutputStream pdfOutput = new ByteArrayOutputStream();
+				new FOPProcessor().concatToPDF(partialFiles, pdfOutput);
+				bytes = pdfOutput.toByteArray();
+				pdfOutput.close();
+
+				outStream.write(bytes);
+			} catch (IOException e) {
+				LOG.error("Can't write to file", e);
+			}
+		}
 	}
 }
