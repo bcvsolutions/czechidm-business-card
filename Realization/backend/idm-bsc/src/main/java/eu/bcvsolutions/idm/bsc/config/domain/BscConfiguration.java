@@ -23,10 +23,22 @@ public interface BscConfiguration extends Configurable, ScriptEnabled {
 	 */
 	String SAVE_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "save.path";
 	String BCK_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "bck.path";
+	String IMAGE_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "image.path";
+	String TMP_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "tmp.path";
+	String TEMPLATE_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "template.path";
+	String FOP_CONFIG_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "fop.config.path";
 
 	String getSavePath();
 
 	String getBckPath();
+
+	String getImagePath();
+
+	String getTmpPath();
+
+	String getTemplatePath();
+
+	String getFopConfigPath();
 
 	@Override
 	default String getConfigurableType() {

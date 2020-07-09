@@ -5,7 +5,6 @@ import {connect} from 'react-redux';
 import {BscBusinessCardManager} from '../../redux';
 import moment from 'moment';
 import uuid from 'uuid';
-import LongRunningTask from "czechidm-core/src/components/advanced/LongRunningTask/LongRunningTask";
 
 /**
  * @author Roman Kučera
@@ -21,11 +20,10 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
   constructor(props, context) {
     super(props, context);
     const {entityId} = this.props;
+    this.setState({showLoading: true, longRunningTask: null});
     this.context.store.dispatch(businessCardManager.fetchBackendForDate(entityId, moment().format('YYYY-MM-DD'), uiKey, (card, error) => {
       if (!error) {
-        console.log("loaded");
-        console.log(card);
-        this.setState({formInstanceKey: uuid.v1(), longRunningTask: null})
+        this.setState({formInstanceKey: uuid.v1(), showLoading: false})
       }
     }));
   }
@@ -72,19 +70,14 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
     if (event) {
       event.preventDefault();
     }
-    // TODO on first load form refs are empty
+    this.setState({showLoading: true});
     const entity = this.refs.form.getData();
-    console.log(entity);
-    console.log(contract.value);
-    console.log(this.refs.formInstance.getValues());
     const {entityId, businessCardEntity} = this.props;
     this.refs.contracts.setValue(null);
     if (businessCardEntity) {
       this.context.store.dispatch(businessCardManager.fetchBackendForDateAndContract(entityId, entity.date, contract.value, uiKey, (card, error) => {
         if (!error) {
-          console.log("loaded");
-          console.log(card);
-          this.setState({formInstanceKey: contract.value})
+          this.setState({showLoading: false})
         }
       }));
     }
@@ -94,42 +87,61 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
     if (event) {
       event.preventDefault();
     }
-    // TODO on first load form refs are empty
+    this.setState({showLoading: true});
     if (date) {
       const entity = this.refs.form.getData();
-      console.log(entity);
-      console.log(date.format('YYYY-MM-DD'));
-      console.log(this.refs.formInstance.getValues());
       const {entityId, businessCardEntity} = this.props;
       if (businessCardEntity) {
-        this.context.store.dispatch(businessCardManager.fetchBackendForDateAndContract(entityId, date.format('YYYY-MM-DD'), entity.contracts, uiKey));
+        this.context.store.dispatch(businessCardManager.fetchBackendForDateAndContract(entityId, date.format('YYYY-MM-DD'), entity.contracts, uiKey, (card, error) => {
+          console.log(error);
+          if (!error) {
+            this.setState({showLoading: false})
+          }
+        }));
       }
     }
   }
 
   closeModal() {
-    this.setState({longRunningTask: null});
+    const {entityId} = this.props;
+    this.context.store.dispatch(businessCardManager.fetchBackendForDate(entityId, moment().format('YYYY-MM-DD'), uiKey, (card, error) => {
+      if (!error) {
+        this.setState({formInstanceKey: uuid.v1(), showLoading: false})
+      }
+    }));
+    this.setState({longRunningTask: null, showLoading: false});
   }
 
   render() {
-    const {uiKey, showLoading, _permissions, businessCardEntity} = this.props;
-    const {formInstanceKey, longRunningTask} = this.state;
+    const {uiKey, _permissions, businessCardEntity} = this.props;
+    const {formInstanceKey, longRunningTask, showLoading} = this.state;
     let formInstance = new Domain.FormInstance({});
     let options = [];
-    console.log(businessCardEntity);
-    console.log("key: " + formInstanceKey);
     if (businessCardEntity) {
-      console.log("setting data for eav form");
       formInstance = new Domain.FormInstance(businessCardEntity.formInstance.formDefinition, businessCardEntity.formInstance.values);
-      // If there are some contracts use the first one as default option
       if (Object.keys(businessCardEntity.contracts).length > 0) {
-        Object.keys(businessCardEntity.contracts).map(key => options.push({
-          value: key,
-          niceLabel: businessCardEntity.contracts[key]
-        }));
+        Object.keys(businessCardEntity.contracts).map(key => {
+          const contract = businessCardEntity.contracts[key];
+          let position = '';
+          let validFrom = '';
+          let validTill = '';
+          if (contract.position) {
+            position = contract.position;
+          }
+          if (contract.validFrom) {
+            validFrom = contract.validFrom;
+          }
+          if (contract.validTill) {
+            validTill = contract.validTill;
+          }
+          options.push({
+            value: key,
+            niceLabel: this.i18n('contract-nice-label',{ position: position, validFrom: validFrom, validTill: validTill })
+          });
+        });
       }
     }
-    if (!businessCardEntity || showLoading) {
+    if (!businessCardEntity) {
       return (
           <Basic.Loading isStatic show/>
       );
@@ -140,7 +152,7 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
           <Basic.Confirm ref="confirm-save" level="success"/>
           <Basic.AbstractForm
               ref="form" data={{date: businessCardEntity.date, contracts: businessCardEntity.selectedContract}}>
-            <Basic.Col lg={ 4 } className="col-lg-4">
+            <Basic.Col lg={4} className="col-lg-4" style={{padding: 0}}>
               <Basic.DateTimePicker
                   mode="date"
                   ref="date"
@@ -153,28 +165,21 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
                   label={this.i18n('contract')}
                   required
                   clearable={false}/>
-              <Advanced.EavForm
-                  ref="formInstance"
-                  key={uuid.v1()}
-                  formInstance={formInstance}
-                  useDefaultValue={false}/>
-            </Basic.Col>
-            <Basic.Col lg={ 4 } className="col-lg-4">
-              <Basic.Row style={{display: 'flex', alignItems: 'middle'}}>
-                <Basic.Button
-                    type="button"
-                    level="info"
-                    onClick={ this.closeModal.bind(this) }>
-                  {this.i18n('button.edit')}
-                </Basic.Button>
-              </Basic.Row>
+              <Basic.Panel showLoading={showLoading} className="no-border no-margin">
+                <Advanced.EavForm
+                    ref="formInstance"
+                    key={uuid.v1()}
+                    formInstance={formInstance}
+                    useDefaultValue={false}/>
+              </Basic.Panel>
             </Basic.Col>
           </Basic.AbstractForm>
           <Basic.Modal
               bsSize="large"
-              show={longRunningTask !== null}
+              show={longRunningTask}
               onHide={this.closeModal.bind(this)}
-              backdrop="static">
+              backdrop="static"
+              keyboard>
             <Basic.Modal.Body
                 style={{padding: 0, marginBottom: -20}}
                 rendered={longRunningTask}>
@@ -182,11 +187,11 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
                   entityIdentifier={longRunningTask ? longRunningTask.longRunningTaskId : null}
                   // header={ this.i18n(`${backendBulkAction.module }:eav.bulk-action.${ backendBulkAction.name }.label`)}
                   showProperties={false}
-                  onComplete={() => this.reload()}
+                  // onComplete={() => this.reload()}
                   footerButtons={
                     <Basic.Button
                         level="link"
-                        onClick={ this.closeModal.bind(this) }>
+                        onClick={this.closeModal.bind(this)}>
                       {this.i18n('button.close')}
                     </Basic.Button>
                   }/>
@@ -210,11 +215,11 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
 BscIdentityBusinessCardTable.propTypes = {
   uiKey: PropTypes.string.isRequired,
   entityId: PropTypes.string,
-  showLoading: PropTypes.bool
+  // showLoading: PropTypes.bool
 };
 
 BscIdentityBusinessCardTable.defaultProps = {
-  showLoading: true
+  // showLoading: true
 };
 
 function select(state, component) {
@@ -223,7 +228,7 @@ function select(state, component) {
     _permissions: identityManager.getPermissions(state, null, entityId),
     identity: identityManager.getEntity(state, entityId),
     businessCardEntity: Managers.DataManager.getData(state, uiKey),
-    showLoading: Managers.DataManager.isShowLoading(state, uiKey)
+    // showLoading: Managers.DataManager.isShowLoading(state, uiKey)
   };
 }
 

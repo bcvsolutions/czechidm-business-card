@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Description;
 import org.springframework.stereotype.Component;
 
@@ -30,16 +31,15 @@ public class BscIdentityPdfRenderer extends BscAbstractPdfRenderer implements Re
 
 	public static final String NAME = "bsc-identity-pdf-renderer";
 
+	@Autowired
+	private FOPProcessor fopProcessor;
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public InputStream render(RptReportDto report) {
 		try (JsonParser jParser = getMapper().getFactory().createParser(getReportData(report))) {
-			int rowNum = 0;
-			//
 			if (jParser.nextToken() == JsonToken.START_ARRAY) {
 				List<File> partialFiles = new ArrayList();
-				// write single entity
-				// TODO check when this will run for multiple users
 				while (jParser.nextToken() == JsonToken.START_OBJECT) {
 					BscBusinessCardReportDto item = getMapper().readValue(jParser, BscBusinessCardReportDto.class);
 					jParser.finishToken();
@@ -50,7 +50,7 @@ public class BscIdentityPdfRenderer extends BscAbstractPdfRenderer implements Re
 				byte[] bytes;
 				try {
 					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-					new FOPProcessor().concatToPDF(partialFiles, outputStream);
+					fopProcessor.concatToPDF(partialFiles, outputStream);
 					bytes = outputStream.toByteArray();
 					outputStream.close();
 					return getInputStream(bytes);

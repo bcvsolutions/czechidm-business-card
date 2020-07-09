@@ -43,6 +43,7 @@ import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.fop.apps.FOPException;
 import org.apache.fop.apps.FOUserAgent;
 import org.apache.fop.apps.Fop;
@@ -54,8 +55,14 @@ import org.apache.fop.area.RenderPagesModel;
 import org.apache.fop.fonts.FontInfo;
 import org.apache.fop.render.Renderer;
 import org.apache.fop.render.xml.XMLRenderer;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
+import eu.bcvsolutions.idm.bsc.config.domain.BscConfiguration;
+import eu.bcvsolutions.idm.core.api.exception.CoreException;
+
+@Component
 public class FOPProcessor extends TemplateProcessor {
 	protected static FOPProcessor instance = null;
 
@@ -70,17 +77,18 @@ public class FOPProcessor extends TemplateProcessor {
 		}
 	};
 
-	public synchronized static FOPProcessor getInstance() {
-		if (instance == null) {
-			instance = new FOPProcessor();
-		}
-		return instance;
+	private final BscConfiguration bscConfiguration;
+
+	@Autowired
+	public FOPProcessor(BscConfiguration bscConfiguration) {
+		super(bscConfiguration);
+		this.bscConfiguration = bscConfiguration;
 	}
 
 	/**
 	 * Generates file filling given template (xsl transformation) with
 	 * parameters from xml.
-	 * 
+	 *
 	 * @param template
 	 *            - template name
 	 * @param xml
@@ -101,7 +109,7 @@ public class FOPProcessor extends TemplateProcessor {
 	/**
 	 * Generates file filling given template (xsl transformation) with
 	 * parameters from xml.
-	 * 
+	 *
 	 * @param template
 	 *            - template name
 	 * @param xml
@@ -118,7 +126,7 @@ public class FOPProcessor extends TemplateProcessor {
 	/**
 	 * Generates file filling given template (xsl transformation) with
 	 * parameters from xml.
-	 * 
+	 *
 	 * @param template
 	 *            - template name
 	 * @param xml
@@ -257,7 +265,7 @@ public class FOPProcessor extends TemplateProcessor {
 
 	/**
 	 * Write tempfile with generated output.
-	 * 
+	 *
 	 * @param template
 	 *            - template name
 	 * @param xml
@@ -270,7 +278,7 @@ public class FOPProcessor extends TemplateProcessor {
 	 * @throws IOException
 	 */
 	protected String foptransform(String template, String xml, String lang, String format) throws IOException {
-		String templatecontent = getTemplateContent(template, lang);
+		String templatecontent = getTemplateContent();
 		FopFactory fopFactory = getFopFactory();
 		File outfile = File.createTempFile("fop", "." + format.toLowerCase());
 		OutputStream out;
@@ -308,8 +316,8 @@ public class FOPProcessor extends TemplateProcessor {
 		return outfile.getAbsolutePath();
 	}
 
-	private String getTemplateContent(String template, String lang) throws IOException {
-		String templateContent = findFileTemplateView(template, lang);
+	private String getTemplateContent() throws IOException {
+		String templateContent = findFileTemplateView();
 		if (templateContent == null) {
 			throw new IOException("Template not found");
 		}
@@ -318,8 +326,11 @@ public class FOPProcessor extends TemplateProcessor {
 
 	private FopFactory getFopFactory() throws IOException {
 		try {
-			// TODO make configurable
-			return FopFactory.newInstance(new File("C:\\work\\modules\\czechidm-business-card\\Realization\\backend\\idm-bsc\\src\\main\\resources\\eu\\bcvsolutions\\idm\\fileTemplate\\fop.conf"));
+			String fopConfigPath = bscConfiguration.getFopConfigPath();
+			if (!StringUtils.isBlank(fopConfigPath)) {
+				return FopFactory.newInstance(new File(fopConfigPath));
+			}
+			throw new CoreException("Path for FOP config not set");
 		} catch (SAXException e) {
 			throw new IOException("Can't load FOP config.", e);
 		}
@@ -327,14 +338,12 @@ public class FOPProcessor extends TemplateProcessor {
 
 	/**
 	 * Converts an XSL-FO document to an area tree XML file of PDF type.
-	 * 
-	 * @param template IdM template name
-	 * @param lang template language
+	 *
 	 * @return Path to area tree XML file
 	 * @throws IOException
 	 */
-	public File convertToAreaTreeXML(String template, String lang, Map<String, Object> params) throws IOException {
-		String templateContent = getTemplateContent(template, lang);
+	public File convertToAreaTreeXML(Map<String, Object> params) throws IOException {
+		String templateContent = getTemplateContent();
 		return convertToAreaTreeXML(params, templateContent);
 	}
 	

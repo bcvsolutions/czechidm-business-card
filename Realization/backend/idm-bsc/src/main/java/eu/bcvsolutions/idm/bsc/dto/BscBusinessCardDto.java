@@ -4,6 +4,7 @@ import java.time.ZonedDateTime;
 import java.util.Map;
 
 import eu.bcvsolutions.idm.core.api.dto.AbstractDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
 
 /**
@@ -15,7 +16,7 @@ public class BscBusinessCardDto extends AbstractDto {
 
 	private ZonedDateTime date;
 
-	private Map<String, String> contracts;
+	private Map<String, IdmIdentityContractDto> contracts;
 
 	private IdmFormInstanceDto formInstance;
 
@@ -32,7 +33,7 @@ public class BscBusinessCardDto extends AbstractDto {
 	 * @param contracts List of valid contracts
 	 * @param formInstance Form instance with values
 	 */
-	public BscBusinessCardDto(ZonedDateTime date, Map<String, String> contracts, IdmFormInstanceDto formInstance) {
+	public BscBusinessCardDto(ZonedDateTime date, Map<String, IdmIdentityContractDto> contracts, IdmFormInstanceDto formInstance) {
 		this.date = date;
 		this.contracts = contracts;
 		this.formInstance = formInstance;
@@ -46,11 +47,11 @@ public class BscBusinessCardDto extends AbstractDto {
 		this.date = date;
 	}
 
-	public Map<String, String> getContracts() {
+	public Map<String, IdmIdentityContractDto> getContracts() {
 		return contracts;
 	}
 
-	public void setContracts(Map<String, String> contracts) {
+	public void setContracts(Map<String, IdmIdentityContractDto> contracts) {
 		this.contracts = contracts;
 	}
 

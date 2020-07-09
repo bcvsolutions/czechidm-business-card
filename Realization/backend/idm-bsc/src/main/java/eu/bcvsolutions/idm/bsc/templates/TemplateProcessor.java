@@ -1,6 +1,6 @@
 /**
  * CzechIdM
- * Copyright (C) 2015 BCV solutions s.r.o., Czech Republic
+ * Copyright (C) 2020 BCV solutions s.r.o., Czech Republic
  * 
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,10 +28,21 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
+
+import eu.bcvsolutions.idm.bsc.config.domain.BscConfiguration;
+import eu.bcvsolutions.idm.core.api.exception.CoreException;
+
 public abstract class TemplateProcessor {
 
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory
 			.getLogger(TemplateProcessor.class);
+
+	private BscConfiguration bscConfiguration;
+
+	public TemplateProcessor(BscConfiguration bscConfiguration) {
+		this.bscConfiguration = bscConfiguration;
+	}
 
 	/**
 	 * Generates byte array filling given template with parameters from map.
@@ -77,18 +88,17 @@ public abstract class TemplateProcessor {
 	}
 	
 	/**
-	 * Finds template in repository.
-	 * If template of given language is not found, returns default language template.
+	 * Load template from configured location
 	 * Return null, if no template is found.
-	 * 
-	 * @param templateName
-	 * @param language
-	 * 
+	 *
 	 * @return
 	 */
-	protected static String findFileTemplateView(String templateName, String language) {
-//		TODO make configurable
-		try (Stream<String> fileStream = Files.lines(Paths.get("C:\\work\\modules\\czechidm-business-card\\Realization\\backend\\idm-bsc\\src\\main\\resources\\eu\\bcvsolutions\\idm\\fileTemplate\\fop-businessCard.xml"))){
+	protected String findFileTemplateView() {
+		String templatePath = bscConfiguration.getTemplatePath();
+		if (StringUtils.isBlank(templatePath)) {
+			throw new CoreException("Path for FOP template not set");
+		}
+		try (Stream<String> fileStream = Files.lines(Paths.get(templatePath))){
 			return fileStream.collect(Collectors.joining("\n"));
 		} catch (IOException e) {
 			LOG.error("Can't load template", e);

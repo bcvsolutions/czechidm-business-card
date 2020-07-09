@@ -23,4 +23,24 @@ public class DefaultBscConfiguration
 	public String getBckPath() {
 		return getConfigurationService().getValue(BCK_PATH);
 	}
+
+	@Override
+	public String getImagePath() {
+		return getConfigurationService().getValue(IMAGE_PATH);
+	}
+
+	@Override
+	public String getTmpPath() {
+		return getConfigurationService().getValue(TMP_PATH);
+	}
+
+	@Override
+	public String getTemplatePath() {
+		return getConfigurationService().getValue(TEMPLATE_PATH);
+	}
+
+	@Override
+	public String getFopConfigPath() {
+		return getConfigurationService().getValue(FOP_CONFIG_PATH);
+	}
 }

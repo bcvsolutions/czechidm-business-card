@@ -9,7 +9,7 @@
       "title": "Business card",
       "date": "Date, for which are contracts valid",
       "contract": "Contracts",
-      "form-attribute-name": "Jméno",
+      "contract-nice-label": "{{position}} - Valid from: {{validFrom}} Valid till: {{validTill}}",
       "button": {
         "generate": "Create business card",
         "edit": "Edit record"
@@ -55,6 +55,9 @@
           "department": {
             "label": "Department"
           },
+          "departmentbutton": {
+            "label": "Edit department for all"
+          },
           "position": {
             "label": "Position"
           },
@@ -73,6 +76,11 @@
       "eav": {
         "error": "Text can have 4 rows max."
       }
+    }
+  },
+  "permission": {
+    "group": {
+      "BUSINESSCARD": "Business cards"
     }
   }
 }

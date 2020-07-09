@@ -9,6 +9,7 @@
       "title": "Vizitky",
       "date": "Datum, ke kterému jsou úvazky platné",
       "contract": "Úvazky",
+      "contract-nice-label": "{{position}} - Platnost od: {{validFrom}} Platnost do: {{validTill}}",
       "button": {
         "generate": "Vytvořit vizitku",
         "edit": "Editovat záznam"
@@ -54,6 +55,9 @@
           "department": {
             "label": "Oddělení"
           },
+          "departmentbutton": {
+            "label": "Editovat oddělení pro všechny"
+          },
           "position": {
             "label": "Pozice"
           },
@@ -72,6 +76,11 @@
       "eav": {
         "error": "Text může mít maximálně 4 řádky."
       }
+    }
+  },
+  "permission": {
+    "group": {
+      "BUSINESSCARD": "Vizitky"
     }
   }
 }

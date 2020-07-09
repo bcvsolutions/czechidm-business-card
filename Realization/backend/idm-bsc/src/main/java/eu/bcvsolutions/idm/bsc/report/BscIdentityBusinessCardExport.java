@@ -10,7 +10,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -79,6 +82,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	private File tempFile;
 	private JsonGenerator jsonGenerator;
 	private UUID relatedReport;
+	private List<String> personalNumbers = new LinkedList<>();
 
 	List<File> partialFiles = new ArrayList();
 
@@ -89,6 +93,8 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	@Autowired
 	@Lazy
 	private BscBusinessCardService businessCardService;
+	@Autowired
+	private FOPProcessor fopProcessor;
 
 	public BscIdentityBusinessCardExport(RptReportService reportService,
 										 AttachmentManager attachmentManager, ObjectMapper mapper) {
@@ -111,9 +117,10 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 
 	@Override
 	protected OperationResult processDto(IdmIdentityDto dto) {
+		personalNumbers.add(dto.getExternalCode());
+
 		Map<String, Object> properties = getProperties();
 		if (properties.get(BUSINESS_CARD_CODE) == null) {
-			// TODO load properties
 			BscBusinessCardDto businessCard = businessCardService.getBusinessCard(dto.getUsername(), LocalDate.now().toString(), null);
 			properties = businessCardService.prepareAndTransformData(businessCard);
 		} else {
@@ -125,7 +132,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 		//Generate partial pdf
 		File pf = null;
 		try {
-			pf = new FOPProcessor().convertToAreaTreeXML("fop-businessCard", "cs", properties);
+			pf = fopProcessor.convertToAreaTreeXML(properties);
 			partialFiles.add(pf);
 		} catch (IOException e) {
 			LOG.error("Not able to load template", e);
@@ -284,14 +291,21 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	}
 
 	private void saveToHdd() {
+		StringBuilder filePath = new StringBuilder();
+		String personalNumber = personalNumbers.stream().findFirst().orElse("");
+
 		String savePath = bscConfiguration.getSavePath();
 		if (!StringUtils.isBlank(savePath)) {
+			filePath.append(savePath);
+			filePath.append(personalNumber);
+			filePath.append("_");
+			filePath.append(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
+			filePath.append(".pdf");
 			byte[] bytes = null;
-			// TODO add some date suffix
-			File targetFile = new File(savePath);
+			File targetFile = new File(filePath.toString());
 			try (OutputStream outStream = new FileOutputStream(targetFile)) {
 				ByteArrayOutputStream pdfOutput = new ByteArrayOutputStream();
-				new FOPProcessor().concatToPDF(partialFiles, pdfOutput);
+				fopProcessor.concatToPDF(partialFiles, pdfOutput);
 				bytes = pdfOutput.toByteArray();
 				pdfOutput.close();
 
