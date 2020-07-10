@@ -212,8 +212,7 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	@Override
 	public BscBusinessCardDto getBusinessCard(String identity, String date, String contractId) {
 
-		// TODO lookup by id or username
-		IdmIdentityDto idmIdentityDto = identityService.getByUsername(identity);
+		IdmIdentityDto idmIdentityDto = getIdentity(identity);
 		LocalDate localDate = LocalDate.parse(date);
 		List<IdmIdentityContractDto> allValidForDate = identityContractService.findAllValidForDate(idmIdentityDto.getId(), localDate, false);
 		allValidForDate.sort(Comparator.comparing(IdmIdentityContractDto::getPosition));
@@ -256,7 +255,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	public ResponseEntity<IdmBulkActionDto> printBusinessCard(BscBusinessCardDto dto) {
 		LOG.info("We will generate business card");
 
-		Map<String, Object> params = prepareAndTransformData(dto);
+		IdmIdentityDto idmIdentityDto = getIdentity(dto.getUserId());
+		Map<String, Object> params = prepareAndTransformData(dto, idmIdentityDto);
 
 		// RUN REPORT
 		IdmBulkActionDto bulkActionDto = bulkActionManager.getAvailableActions(IdmIdentity.class).
@@ -265,10 +265,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 				.findFirst()
 				.orElse(null);
 		if (bulkActionDto != null) {
-			// TODO lookup by id or username
-			IdmIdentityDto idmIdentityDto = identityService.getByUsername(dto.getUserId());
 			bulkActionDto = prepareAndRunBulkAction(idmIdentityDto.getId(), bulkActionDto, params);
-			return new ResponseEntity<>(bulkActionDto, HttpStatus.OK);
+			return new ResponseEntity<>(bulkActionDto, HttpStatus.CREATED);
 		}
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
@@ -287,11 +285,11 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	}
 
 	@Override
-	public Map<String, Object> prepareAndTransformData(BscBusinessCardDto dto) {
+	public Map<String, Object> prepareAndTransformData(BscBusinessCardDto dto, IdmIdentityDto identityDto) {
 		Map<String, Object> params = new HashMap<>();
 
 		transformAttrsToMap(params, dto);
-		makeRoundCorners(params);
+		makeRoundCorners(params, identityDto);
 
 		params.put("nameSize", ((String) params.getOrDefault(nameAttrName, "") + params.getOrDefault(titlesAfterAttrName, "") +
 				params.getOrDefault(titlesBeforeAttrName, "")).length() > 38 ? "8.6pt" : "11pt");
@@ -304,13 +302,16 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		return params;
 	}
 
-	protected void makeRoundCorners(Map<String, Object> params) {
+	protected void makeRoundCorners(Map<String, Object> params, IdmIdentityDto identityDto) {
 		// round corners
 		String imagePath = bscConfiguration.getImagePath();
 		String tmpPath = bscConfiguration.getTmpPath();
 		String randTmp;
 		if (!StringUtils.isBlank(imagePath) && !StringUtils.isBlank(tmpPath)) {
 			try {
+				if (!StringUtils.isBlank(identityDto.getExternalCode())) {
+					imagePath += identityDto.getExternalCode() + ".png";
+				}
 				randTmp = tmpPath + UUID.randomUUID().toString() + ".png";
 				ImageUtils.writeToFile(
 						ImageUtils.makeRoundedCorner(ImageUtils.readFromFile(imagePath), 40), "png", randTmp);
@@ -354,5 +355,13 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 				params.put(attr.getCode(), idmFormValueDto.getShortTextValue());
 			}
 		});
+	}
+
+	private IdmIdentityDto getIdentity(String identifier) {
+		IdmIdentityDto idmIdentityDto = identityService.getByUsername(identifier);
+		if (idmIdentityDto == null) {
+			idmIdentityDto = identityService.get(identifier);
+		}
+		return idmIdentityDto;
 	}
 }

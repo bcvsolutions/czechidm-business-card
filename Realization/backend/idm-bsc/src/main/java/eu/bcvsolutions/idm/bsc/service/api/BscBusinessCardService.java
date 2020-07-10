@@ -19,5 +19,5 @@ public interface BscBusinessCardService {
 
 	ResponseEntity<IdmBulkActionDto> printBusinessCard(BscBusinessCardDto dto);
 
-	Map<String, Object> prepareAndTransformData(BscBusinessCardDto dto);
+	Map<String, Object> prepareAndTransformData(BscBusinessCardDto dto, IdmIdentityDto identityDto);
 }

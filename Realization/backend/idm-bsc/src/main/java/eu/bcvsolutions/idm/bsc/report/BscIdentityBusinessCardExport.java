@@ -122,7 +122,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 		Map<String, Object> properties = getProperties();
 		if (properties.get(BUSINESS_CARD_CODE) == null) {
 			BscBusinessCardDto businessCard = businessCardService.getBusinessCard(dto.getUsername(), LocalDate.now().toString(), null);
-			properties = businessCardService.prepareAndTransformData(businessCard);
+			properties = businessCardService.prepareAndTransformData(businessCard, dto);
 		} else {
 			properties = (Map<String, Object>) properties.get(BUSINESS_CARD_CODE);
 		}
