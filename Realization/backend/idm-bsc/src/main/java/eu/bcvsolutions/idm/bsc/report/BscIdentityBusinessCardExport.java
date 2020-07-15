@@ -119,6 +119,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	protected OperationResult processDto(IdmIdentityDto dto) {
 		personalNumbers.add(dto.getExternalCode());
 
+		// get data for user or load them from properties
 		Map<String, Object> properties = getProperties();
 		if (properties.get(BUSINESS_CARD_CODE) == null) {
 			BscBusinessCardDto businessCard = businessCardService.getBusinessCard(dto.getUsername(), LocalDate.now().toString(), null);
@@ -139,6 +140,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 		}
 
 		try {
+			// Create dto for data transfer into renderer
 			BscBusinessCardReportDto businessCardReportDto = new BscBusinessCardReportDto();
 			businessCardReportDto.setUserIdentifier(dto.getId());
 			businessCardReportDto.setPdf(pf);
@@ -290,6 +292,9 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 		return REPORT_NAME;
 	}
 
+	/**
+	 * Save pdf to drive
+	 */
 	private void saveToHdd() {
 		StringBuilder filePath = new StringBuilder();
 		String personalNumber = personalNumbers.stream().findFirst().orElse("");

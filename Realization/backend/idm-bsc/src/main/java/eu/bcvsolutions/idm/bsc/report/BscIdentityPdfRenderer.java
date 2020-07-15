@@ -15,11 +15,12 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 
 import eu.bcvsolutions.idm.bsc.templates.FOPProcessor;
+import eu.bcvsolutions.idm.core.api.exception.CoreException;
 import eu.bcvsolutions.idm.rpt.api.dto.RptReportDto;
 import eu.bcvsolutions.idm.rpt.api.renderer.RendererRegistrar;
 
 /**
- * Renderer for {@link BscIdentityBusinessCardExport} report.
+ * Renderer for {@link BscIdentityBusinessCardExport} report. It will create pdf file
  *
  * @author Roman Kucera
  */
@@ -41,27 +42,34 @@ public class BscIdentityPdfRenderer extends BscAbstractPdfRenderer implements Re
 			if (jParser.nextToken() == JsonToken.START_ARRAY) {
 				List<File> partialFiles = new ArrayList();
 				while (jParser.nextToken() == JsonToken.START_OBJECT) {
-					BscBusinessCardReportDto item = getMapper().readValue(jParser, BscBusinessCardReportDto.class);
-					jParser.finishToken();
-					if (item.getPdf() != null) {
-						partialFiles.add(item.getPdf());
-					}
+					processItem(jParser, partialFiles);
 				}
-				byte[] bytes;
-				try {
-					ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-					fopProcessor.concatToPDF(partialFiles, outputStream);
-					bytes = outputStream.toByteArray();
-					outputStream.close();
-					return getInputStream(bytes);
-				} catch (Exception ex) {
-					LOG.error("An error occurred while generating business card.", ex);
-				}
+				return createInputStream(partialFiles);
 			}
 		} catch (IOException e) {
 			LOG.error("Error during rendering", e);
 		}
 		return null;
+	}
+
+	private void processItem(JsonParser jParser, List<File> partialFiles) throws IOException {
+		BscBusinessCardReportDto item = getMapper().readValue(jParser, BscBusinessCardReportDto.class);
+		jParser.finishToken();
+		if (item.getPdf() != null) {
+			partialFiles.add(item.getPdf());
+		}
+	}
+
+	private InputStream createInputStream(List<File> partialFiles) {
+		try {
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			fopProcessor.concatToPDF(partialFiles, outputStream);
+			byte[] bytes = outputStream.toByteArray();
+			outputStream.close();
+			return getInputStream(bytes);
+		} catch (Exception ex) {
+			throw new CoreException("An error occurred while generating business card.", ex);
+		}
 	}
 
 	@Override

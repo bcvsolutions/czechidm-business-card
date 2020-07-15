@@ -47,7 +47,7 @@ import eu.bcvsolutions.idm.core.eav.api.service.FormService;
 import eu.bcvsolutions.idm.core.model.entity.IdmIdentity;
 
 /**
- * This service is used from {@Link BscBusinessCardController}
+ * This service is used from {@link eu.bcvsolutions.idm.bsc.rest.impl.BscBusinessCardController}
  *
  * @author Roman Kucera
  */
@@ -82,13 +82,6 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	public DefaultBscBusinessCardService() {
 	}
 
-	/**
-	 * Prepare and return form instance with values
-	 *
-	 * @param identityDto
-	 * @param contractId
-	 * @return Form instance with values
-	 */
 	@Override
 	public IdmFormInstanceDto getFormInstance(IdmIdentityDto identityDto, String contractId) {
 		IdmFormInstanceDto formInstanceDto = new IdmFormInstanceDto();
@@ -157,58 +150,6 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		return formInstanceDto;
 	}
 
-	protected IdmFormValueDto getBoolValue(IdmFormAttributeDto attr, boolean value) {
-		IdmFormValueDto nameValue = new IdmFormValueDto();
-		nameValue.setBooleanValue(value);
-		nameValue.setFormAttribute(attr.getId());
-		nameValue.setPersistentType(PersistentType.BOOLEAN);
-		// set attribute to embedded
-		Map<String, BaseDto> embedded = new HashMap<>();
-		embedded.put(embeddedFormAttrName, attr);
-		nameValue.setEmbedded(embedded);
-		return nameValue;
-	}
-
-	protected IdmFormValueDto getShortTextValue(IdmFormAttributeDto attr, String value) {
-		IdmFormValueDto nameValue = new IdmFormValueDto();
-		nameValue.setShortTextValue(value);
-		nameValue.setFormAttribute(attr.getId());
-		nameValue.setPersistentType(PersistentType.SHORTTEXT);
-		// set attribute to embedded
-		Map<String, BaseDto> embedded = new HashMap<>();
-		embedded.put(embeddedFormAttrName, attr);
-		nameValue.setEmbedded(embedded);
-		return nameValue;
-	}
-
-	protected IdmFormValueDto getStringValue(IdmFormAttributeDto attr, String value) {
-		IdmFormValueDto nameValue = new IdmFormValueDto();
-		nameValue.setStringValue(value);
-		nameValue.setFormAttribute(attr.getId());
-		nameValue.setPersistentType(PersistentType.TEXT);
-		// set attribute to embedded
-		Map<String, BaseDto> embedded = new HashMap<>();
-		embedded.put(embeddedFormAttrName, attr);
-		nameValue.setEmbedded(embedded);
-		return nameValue;
-	}
-
-	protected IdmFormAttributeDto getFormAttr(String code, boolean isReadOnly, PersistentType type) {
-		IdmFormAttributeDto attributeDto = new IdmFormAttributeDto();
-		attributeDto.setCode(code);
-		attributeDto.setPersistentType(type);
-		attributeDto.setId(UUID.randomUUID());
-		attributeDto.setReadonly(isReadOnly);
-		return attributeDto;
-	}
-
-	/**
-	 * Prepare Business card object based on date and contractId if it's filled
-	 *
-	 * @param date       Find all valid contracts for this date
-	 * @param contractId If it's filled we will use this contract for default values, otherwise we will use main contract
-	 * @return Business card dto
-	 */
 	@Override
 	public BscBusinessCardDto getBusinessCard(String identity, String date, String contractId) {
 
@@ -245,12 +186,6 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		return businessCardDto;
 	}
 
-	/**
-	 * It will create PDF from dto
-	 *
-	 * @param dto DTO with values which we use for PDF generation
-	 * @return
-	 */
 	@Override
 	public ResponseEntity<IdmBulkActionDto> printBusinessCard(BscBusinessCardDto dto) {
 		LOG.info("We will generate business card");
@@ -271,24 +206,9 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-	protected IdmBulkActionDto prepareAndRunBulkAction(UUID userId, IdmBulkActionDto bulkActionDto, Map<String, Object> params) {
-		Set<UUID> ids = Collections.singleton(userId);
-		bulkActionDto.setIdentifiers(ids);
-
-		Map<String, Object> properties = new HashMap<>();
-		properties.put(BscIdentityBusinessCardExport.BUSINESS_CARD_CODE, params);
-		properties.put(BscIdentityBusinessCardExport.SAVE_TO_HDD_CODE, params.get(saveToHddAttrName));
-		bulkActionDto.setProperties(properties);
-		bulkActionDto = bulkActionManager.processAction(bulkActionDto);
-		LOG.info("bulk action: " + bulkActionDto);
-		return bulkActionDto;
-	}
-
 	@Override
 	public Map<String, Object> prepareAndTransformData(BscBusinessCardDto dto, IdmIdentityDto identityDto) {
-		Map<String, Object> params = new HashMap<>();
-
-		transformAttrsToMap(params, dto);
+		Map<String, Object> params = transformAttrsToMap(dto);
 		makeRoundCorners(params, identityDto);
 
 		params.put("nameSize", ((String) params.getOrDefault(nameAttrName, "") + params.getOrDefault(titlesAfterAttrName, "") +
@@ -302,6 +222,103 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		return params;
 	}
 
+	/**
+	 * Helper method for creating {@link IdmFormValueDto} in {@link #getFormInstance(IdmIdentityDto, String) getFormInstance}
+	 * @param attr {@link IdmFormAttributeDto} for which we want to create value
+	 * @param value boolean value
+	 * @return {@link IdmFormValueDto} for specific attribute and with specific value
+	 */
+	protected IdmFormValueDto getBoolValue(IdmFormAttributeDto attr, boolean value) {
+		IdmFormValueDto nameValue = new IdmFormValueDto();
+		nameValue.setBooleanValue(value);
+		nameValue.setFormAttribute(attr.getId());
+		nameValue.setPersistentType(PersistentType.BOOLEAN);
+		// set attribute to embedded
+		Map<String, BaseDto> embedded = new HashMap<>();
+		embedded.put(embeddedFormAttrName, attr);
+		nameValue.setEmbedded(embedded);
+		return nameValue;
+	}
+
+	/**
+	 * Helper method for creating {@link IdmFormValueDto} in {@link #getFormInstance(IdmIdentityDto, String) getFormInstance}
+	 * This method create value with {@link PersistentType} SHORTEXT
+	 * @param attr {@link IdmFormAttributeDto} for which we want to create value
+	 * @param value String value
+	 * @return {@link IdmFormValueDto} for specific attribute and with specific value
+	 */
+	protected IdmFormValueDto getShortTextValue(IdmFormAttributeDto attr, String value) {
+		IdmFormValueDto nameValue = new IdmFormValueDto();
+		nameValue.setShortTextValue(value);
+		nameValue.setFormAttribute(attr.getId());
+		nameValue.setPersistentType(PersistentType.SHORTTEXT);
+		// set attribute to embedded
+		Map<String, BaseDto> embedded = new HashMap<>();
+		embedded.put(embeddedFormAttrName, attr);
+		nameValue.setEmbedded(embedded);
+		return nameValue;
+	}
+
+	/**
+	 * Helper method for creating {@link IdmFormValueDto} in {@link #getFormInstance(IdmIdentityDto, String) getFormInstance}
+	 * This method create value with {@link PersistentType} TEXT
+	 * @param attr {@link IdmFormAttributeDto} for which we want to create value
+	 * @param value String value
+	 * @return {@link IdmFormValueDto} for specific attribute and with specific value
+	 */
+	protected IdmFormValueDto getStringValue(IdmFormAttributeDto attr, String value) {
+		IdmFormValueDto nameValue = new IdmFormValueDto();
+		nameValue.setStringValue(value);
+		nameValue.setFormAttribute(attr.getId());
+		nameValue.setPersistentType(PersistentType.TEXT);
+		// set attribute to embedded
+		Map<String, BaseDto> embedded = new HashMap<>();
+		embedded.put(embeddedFormAttrName, attr);
+		nameValue.setEmbedded(embedded);
+		return nameValue;
+	}
+
+	/**
+	 * Helper method for creating {@link IdmFormAttributeDto} in {@link #getFormInstance(IdmIdentityDto, String) getFormInstance}
+	 * @param code code for the attribute
+	 * @param isReadOnly boolean value if attribute should be read only or not
+	 * @param type {@link PersistentType} of the attribute
+	 * @return {@link IdmFormAttributeDto} with specific code and type
+	 */
+	protected IdmFormAttributeDto getFormAttr(String code, boolean isReadOnly, PersistentType type) {
+		IdmFormAttributeDto attributeDto = new IdmFormAttributeDto();
+		attributeDto.setCode(code);
+		attributeDto.setPersistentType(type);
+		attributeDto.setId(UUID.randomUUID());
+		attributeDto.setReadonly(isReadOnly);
+		return attributeDto;
+	}
+
+	/**
+	 * It will create bulk action with specific params
+	 * @param userId this value is send into bulk action, so it will run bulk action for this one user
+	 * @param bulkActionDto dto for {@link BscIdentityBusinessCardExport} bulk action
+	 * @param params Map with params for bulk action
+	 * @return created bulk action which was started
+	 */
+	protected IdmBulkActionDto prepareAndRunBulkAction(UUID userId, IdmBulkActionDto bulkActionDto, Map<String, Object> params) {
+		Set<UUID> ids = Collections.singleton(userId);
+		bulkActionDto.setIdentifiers(ids);
+
+		Map<String, Object> properties = new HashMap<>();
+		properties.put(BscIdentityBusinessCardExport.BUSINESS_CARD_CODE, params);
+		properties.put(BscIdentityBusinessCardExport.SAVE_TO_HDD_CODE, params.get(saveToHddAttrName));
+		bulkActionDto.setProperties(properties);
+		bulkActionDto = bulkActionManager.processAction(bulkActionDto);
+		LOG.info("bulk action: [{}]", bulkActionDto);
+		return bulkActionDto;
+	}
+
+	/**
+	 * It will make round corners of the user's photo for business card
+	 * @param params Map with params, it will add new param with the rounded image
+	 * @param identityDto User for which we want to round the image
+	 */
 	protected void makeRoundCorners(Map<String, Object> params, IdmIdentityDto identityDto) {
 		// round corners
 		String imagePath = bscConfiguration.getImagePath();
@@ -322,7 +339,13 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		}
 	}
 
-	protected void transformAttrsToMap(Map<String, Object> params, BscBusinessCardDto dto) {
+	/**
+	 * Transform {@link BscBusinessCardDto} into {@link Map}
+	 * @param dto {@link BscBusinessCardDto} for transformation
+	 * @return Map with attributes from {@link BscBusinessCardDto}
+	 */
+	protected Map<String, Object> transformAttrsToMap(BscBusinessCardDto dto) {
+		Map<String, Object> params = new HashMap<>();
 		IdmFormInstanceDto formInstance = dto.getFormInstance();
 		Map<UUID, IdmFormAttributeDto> attributes = formInstance.getFormDefinition().getFormAttributes()
 				.stream()
@@ -344,19 +367,34 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 					params.put(attr.getCode(), ", " + idmFormValueDto.getShortTextValue());
 				}
 			} else if (attr.getCode().equals(departmentAttrName)) {
-				if (!StringUtils.isEmpty(idmFormValueDto.getStringValue())) {
-					AtomicInteger suffix = new AtomicInteger(1);
-					Arrays.asList(idmFormValueDto.getStringValue().split("\\n")).forEach(s -> {
-						params.put("department" + suffix, s);
-						suffix.getAndIncrement();
-					});
-				}
+				transformDepartment(params, idmFormValueDto);
 			} else {
 				params.put(attr.getCode(), idmFormValueDto.getShortTextValue());
 			}
 		});
+		return params;
 	}
 
+	/**
+	 * Transform department attribute, we need to split the attribute into 4 pieces and put these peaces as individual params into Map
+	 * @param params {@link Map} with params
+	 * @param idmFormValueDto {@link IdmFormValueDto} which will be transformed into params
+	 */
+	protected void transformDepartment(Map<String, Object> params, IdmFormValueDto idmFormValueDto) {
+		if (!StringUtils.isEmpty(idmFormValueDto.getStringValue())) {
+			AtomicInteger suffix = new AtomicInteger(1);
+			Arrays.asList(idmFormValueDto.getStringValue().split("\\n")).forEach(s -> {
+				params.put("department" + suffix, s);
+				suffix.getAndIncrement();
+			});
+		}
+	}
+
+	/**
+	 * Method for finding user by username or id
+	 * @param identifier it could be username or String representation of UUID
+	 * @return {@link IdmIdentityDto} which was found for specific identifier
+	 */
 	private IdmIdentityDto getIdentity(String identifier) {
 		IdmIdentityDto idmIdentityDto = identityService.getByUsername(identifier);
 		if (idmIdentityDto == null) {

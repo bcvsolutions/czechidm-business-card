@@ -8,6 +8,7 @@ import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
 import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormInstanceDto;
 
 /**
+ * Dto which is used for data transfer between BE and FE
  * @author Roman Kucera
  */
 public class BscBusinessCardDto extends AbstractDto {

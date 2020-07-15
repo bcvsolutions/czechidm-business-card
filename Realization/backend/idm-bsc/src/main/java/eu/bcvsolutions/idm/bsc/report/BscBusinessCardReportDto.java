@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
+ * DTO for data transfer between {@link BscIdentityBusinessCardExport} and {@link BscIdentityPdfRenderer}
  * @author Roman Kucera
  */
 public class BscBusinessCardReportDto implements Serializable {
