@@ -32,9 +32,12 @@ import eu.bcvsolutions.idm.bsc.util.ImageUtils;
 import eu.bcvsolutions.idm.core.api.bulk.action.BulkActionManager;
 import eu.bcvsolutions.idm.core.api.bulk.action.dto.IdmBulkActionDto;
 import eu.bcvsolutions.idm.core.api.dto.BaseDto;
+import eu.bcvsolutions.idm.core.api.dto.IdmContractSliceDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityContractDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmIdentityDto;
 import eu.bcvsolutions.idm.core.api.dto.IdmTreeNodeDto;
+import eu.bcvsolutions.idm.core.api.dto.filter.IdmContractSliceFilter;
+import eu.bcvsolutions.idm.core.api.service.IdmContractSliceService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityContractService;
 import eu.bcvsolutions.idm.core.api.service.IdmIdentityService;
 import eu.bcvsolutions.idm.core.eav.api.domain.BaseFaceType;
@@ -66,6 +69,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	protected BscConfiguration bscConfiguration;
 	@Autowired
 	protected FormService formService;
+	@Autowired
+	protected IdmContractSliceService contractSliceService;
 
 	protected String nameAttrName = "name";
 	protected String titlesBeforeAttrName = "titlesBefore";
@@ -120,6 +125,9 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		String treeNodeEavUrl = "";
 		if (!StringUtils.isBlank(contractId)) {
 			IdmIdentityContractDto contractDto = identityContractService.get(contractId);
+			if (contractDto == null) {
+				contractDto = contractSliceService.get(contractId);
+			}
 			if (contractDto != null && !StringUtils.isBlank(contractDto.getPosition())) {
 				position = contractDto.getPosition();
 			}
@@ -152,13 +160,24 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	@Override
 	public BscBusinessCardDto getBusinessCard(String identity, String date, String contractId) {
-
 		IdmIdentityDto idmIdentityDto = getIdentity(identity);
 		LocalDate localDate = LocalDate.parse(date);
 		List<IdmIdentityContractDto> allValidForDate = identityContractService.findAllValidForDate(idmIdentityDto.getId(), localDate, false);
 		allValidForDate.sort(Comparator.comparing(IdmIdentityContractDto::getPosition));
 		Map<String, IdmIdentityContractDto> contracts = new LinkedHashMap<>();
 		allValidForDate.forEach(idmIdentityContractDto -> contracts.put(idmIdentityContractDto.getId().toString(), idmIdentityContractDto));
+
+		// get slices
+		IdmContractSliceFilter contractSliceFilter = new IdmContractSliceFilter();
+		contractSliceFilter.setIdentity(idmIdentityDto.getId());
+		List<IdmContractSliceDto> allSlicesForUser = contractSliceService.find(contractSliceFilter, null).getContent();
+		// Find future slices
+		allSlicesForUser.forEach(idmContractSliceDto -> {
+			if (!idmContractSliceDto.isUsingAsContract() && idmContractSliceDto.isValid(localDate)) {
+				contracts.put(idmContractSliceDto.getId().toString(), idmContractSliceDto);
+				allValidForDate.add(idmContractSliceDto);
+			}
+		});
 
 		BscBusinessCardDto businessCardDto = new BscBusinessCardDto();
 		if (StringUtils.isBlank(contractId) && !allValidForDate.isEmpty()) {
@@ -224,7 +243,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	/**
 	 * Helper method for creating {@link IdmFormValueDto} in {@link #getFormInstance(IdmIdentityDto, String) getFormInstance}
-	 * @param attr {@link IdmFormAttributeDto} for which we want to create value
+	 *
+	 * @param attr  {@link IdmFormAttributeDto} for which we want to create value
 	 * @param value boolean value
 	 * @return {@link IdmFormValueDto} for specific attribute and with specific value
 	 */
@@ -243,7 +263,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	/**
 	 * Helper method for creating {@link IdmFormValueDto} in {@link #getFormInstance(IdmIdentityDto, String) getFormInstance}
 	 * This method create value with {@link PersistentType} SHORTEXT
-	 * @param attr {@link IdmFormAttributeDto} for which we want to create value
+	 *
+	 * @param attr  {@link IdmFormAttributeDto} for which we want to create value
 	 * @param value String value
 	 * @return {@link IdmFormValueDto} for specific attribute and with specific value
 	 */
@@ -262,7 +283,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	/**
 	 * Helper method for creating {@link IdmFormValueDto} in {@link #getFormInstance(IdmIdentityDto, String) getFormInstance}
 	 * This method create value with {@link PersistentType} TEXT
-	 * @param attr {@link IdmFormAttributeDto} for which we want to create value
+	 *
+	 * @param attr  {@link IdmFormAttributeDto} for which we want to create value
 	 * @param value String value
 	 * @return {@link IdmFormValueDto} for specific attribute and with specific value
 	 */
@@ -280,9 +302,10 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	/**
 	 * Helper method for creating {@link IdmFormAttributeDto} in {@link #getFormInstance(IdmIdentityDto, String) getFormInstance}
-	 * @param code code for the attribute
+	 *
+	 * @param code       code for the attribute
 	 * @param isReadOnly boolean value if attribute should be read only or not
-	 * @param type {@link PersistentType} of the attribute
+	 * @param type       {@link PersistentType} of the attribute
 	 * @return {@link IdmFormAttributeDto} with specific code and type
 	 */
 	protected IdmFormAttributeDto getFormAttr(String code, boolean isReadOnly, PersistentType type) {
@@ -296,9 +319,10 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	/**
 	 * It will create bulk action with specific params
-	 * @param userId this value is send into bulk action, so it will run bulk action for this one user
+	 *
+	 * @param userId        this value is send into bulk action, so it will run bulk action for this one user
 	 * @param bulkActionDto dto for {@link BscIdentityBusinessCardExport} bulk action
-	 * @param params Map with params for bulk action
+	 * @param params        Map with params for bulk action
 	 * @return created bulk action which was started
 	 */
 	protected IdmBulkActionDto prepareAndRunBulkAction(UUID userId, IdmBulkActionDto bulkActionDto, Map<String, Object> params) {
@@ -316,7 +340,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	/**
 	 * It will make round corners of the user's photo for business card
-	 * @param params Map with params, it will add new param with the rounded image
+	 *
+	 * @param params      Map with params, it will add new param with the rounded image
 	 * @param identityDto User for which we want to round the image
 	 */
 	protected void makeRoundCorners(Map<String, Object> params, IdmIdentityDto identityDto) {
@@ -341,6 +366,7 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	/**
 	 * Transform {@link BscBusinessCardDto} into {@link Map}
+	 *
 	 * @param dto {@link BscBusinessCardDto} for transformation
 	 * @return Map with attributes from {@link BscBusinessCardDto}
 	 */
@@ -377,7 +403,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	/**
 	 * Transform department attribute, we need to split the attribute into 4 pieces and put these peaces as individual params into Map
-	 * @param params {@link Map} with params
+	 *
+	 * @param params          {@link Map} with params
 	 * @param idmFormValueDto {@link IdmFormValueDto} which will be transformed into params
 	 */
 	protected void transformDepartment(Map<String, Object> params, IdmFormValueDto idmFormValueDto) {
@@ -392,6 +419,7 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	/**
 	 * Method for finding user by username or id
+	 *
 	 * @param identifier it could be username or String representation of UUID
 	 * @return {@link IdmIdentityDto} which was found for specific identifier
 	 */
