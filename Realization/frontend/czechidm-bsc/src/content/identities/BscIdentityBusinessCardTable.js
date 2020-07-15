@@ -54,8 +54,6 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
       console.log(businessCardEntity);
       this.context.store.dispatch(businessCardManager.generateBusinessCard(businessCardEntity, uiKey + "generate", (bulkAction, error) => {
         if (!error) {
-          console.log("bulk action started");
-          console.log(bulkAction);
           this.setState({longRunningTask: bulkAction})
         }
       }));

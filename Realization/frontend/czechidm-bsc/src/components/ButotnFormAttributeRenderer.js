@@ -25,7 +25,6 @@ export default class ButtonFormAttributeRenderer extends Advanced.AbstractFormAt
 
   forward() {
     const {values} = this.props;
-    console.log(values)
     if (values && values.length === 1) {
       this.context.history.push(values[0].value);
     }
