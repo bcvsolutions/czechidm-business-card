@@ -23,8 +23,6 @@ package eu.bcvsolutions.idm.bsc.templates;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -36,13 +34,11 @@ import java.util.Map;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fop.apps.FOPException;
 import org.apache.fop.apps.FOUserAgent;
@@ -83,237 +79,6 @@ public class FOPProcessor extends TemplateProcessor {
 	public FOPProcessor(BscConfiguration bscConfiguration) {
 		super(bscConfiguration);
 		this.bscConfiguration = bscConfiguration;
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from xml.
-	 *
-	 * @param template
-	 *            - template name
-	 * @param xml
-	 *            - xml data
-	 * @param lang
-	 *            - template language
-	 * @param format
-	 *            - output format
-	 * @return file contents
-	 * @throws IOException
-	 * @throws FileNotFoundException
-	 */
-	public byte[] generateByteA(String template, String xml, String lang, String format) throws IOException {
-		byte[] temp = IOUtils.toByteArray(new FileInputStream(new File(foptransform(template, xml, lang, format))));
-		return temp;
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from xml.
-	 *
-	 * @param template
-	 *            - template name
-	 * @param xml
-	 *            - xml data
-	 * @param lang
-	 *            - template language
-	 * @return file contents
-	 * @throws IOException
-	 */
-	public byte[] generateByteA(String template, String xml, String lang) throws IOException {
-		return generateByteA(template, xml, lang, "PDF");
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from xml.
-	 *
-	 * @param template
-	 *            - template name
-	 * @param xml
-	 *            - xml data
-	 * @return file contents
-	 * @throws IOException
-	 */
-	public byte[] generateByteA(String template, String xml) throws IOException {
-		return generateByteA(template, xml, null, "PDF");
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from map.
-	 * 
-	 * @param template
-	 *            - template name
-	 * @param params
-	 *            - map of parameters to fill in
-	 * @param lang
-	 *            - template language
-	 * @param format
-	 *            - output format
-	 * @return file contents
-	 * @throws IOException
-	 */
-	public byte[] generateByteA(String template, Map params, String lang, String format) throws IOException {
-		return generateByteA(template, valueToString("params", params), lang, format);
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from map.
-	 * 
-	 * @param template
-	 *            - template name
-	 * @param params
-	 *            - map of parameters to fill in
-	 * @param lang
-	 *            - template language
-	 * @return file contents
-	 * @throws IOException
-	 */
-	@Override
-	public byte[] generateByteA(String template, Map params, String lang) throws IOException {
-		return generateByteA(template, params, lang, "PDF");
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from xml.
-	 * 
-	 * @param template
-	 *            - template name
-	 * @param xml
-	 *            - xml data
-	 * @param lang
-	 *            - template language
-	 * @param format
-	 *            - output format
-	 * @return filename
-	 * @throws IOException
-	 */
-	public String generateFile(String template, String xml, String lang, String format) throws IOException {
-		return foptransform(template, xml, lang, format);
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from xml.
-	 * 
-	 * @param template
-	 *            - template name
-	 * @param xml
-	 *            - xml data
-	 * @param lang
-	 *            - template language
-	 * @return filename
-	 * @throws IOException
-	 */
-	public String generateFile(String template, String xml, String lang) throws IOException {
-		return generateFile(template, xml, lang, "PDF");
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from xml.
-	 * 
-	 * @param template
-	 *            - template name
-	 * @param xml
-	 *            - xml data
-	 * @return filename
-	 * @throws IOException
-	 */
-	public String generateFile(String template, String xml) throws IOException {
-		return generateFile(template, xml, null, "PDF");
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from map.
-	 * 
-	 * @param template
-	 *            - template name
-	 * @param params
-	 *            - map of parameters to fill in
-	 * @param lang
-	 *            - template language
-	 * @param format
-	 *            - output format
-	 * @return filename
-	 * @throws IOException
-	 */
-	public String generateFile(String template, Map params, String lang, String format) throws IOException {
-		return generateFile(template, valueToString("params", params), lang, format);
-	}
-
-	/**
-	 * Generates file filling given template (xsl transformation) with
-	 * parameters from map.
-	 * 
-	 * @param template
-	 *            - template name
-	 * @param params
-	 *            - map of parameters to fill in
-	 * @param lang
-	 *            - template language
-	 * @return filename
-	 * @throws IOException
-	 */
-	@Override
-	public String generateFile(String template, Map params, String lang) throws IOException {
-		return generateFile(template, params, lang, "PDF");
-	}
-
-	/**
-	 * Write tempfile with generated output.
-	 *
-	 * @param template
-	 *            - template name
-	 * @param xml
-	 *            - xml data
-	 * @param lang
-	 *            - template language
-	 * @param format
-	 *            - output format
-	 * @return
-	 * @throws IOException
-	 */
-	protected String foptransform(String template, String xml, String lang, String format) throws IOException {
-		String templatecontent = getTemplateContent();
-		FopFactory fopFactory = getFopFactory();
-		File outfile = File.createTempFile("fop", "." + format.toLowerCase());
-		OutputStream out;
-		try {
-			out = new BufferedOutputStream(new FileOutputStream(outfile));
-		} catch (FileNotFoundException e) {
-			throw new IOException("Temp file lost", e);
-		}
-		Fop fop = null;
-		try {
-			fop = fopFactory.newFop(formats.get(format.toUpperCase()), out);
-		} catch (FOPException e) {
-			throw new IOException("Can't create FOP", e);
-		}
-		TransformerFactory factory = TransformerFactory.newInstance();
-		Transformer transformer;
-		try {
-			transformer = factory.newTransformer(new StreamSource(new StringReader(templatecontent)));
-		} catch (TransformerConfigurationException e) {
-			throw new IOException("Can't create transformer - likely broken template", e);
-		}
-		Source src = new StreamSource(new StringReader(xml));
-		Result res;
-		try {
-			res = new SAXResult(fop.getDefaultHandler());
-		} catch (FOPException e) {
-			throw new IOException("Can't parse data xml", e);
-		}
-		try {
-			transformer.transform(src, res);
-		} catch (TransformerException | NullPointerException e) {
-			throw new IOException("Transformation failed. likely broken data or template", e);
-		}
-		out.close();
-		return outfile.getAbsolutePath();
 	}
 
 	private String getTemplateContent() throws IOException {
@@ -409,27 +174,6 @@ public class FOPProcessor extends TemplateProcessor {
 		return outfile;
 	}
 
-
-	/**
-	 * Concatenates an array of area tree XML files to a single PDF file.
-	 * 
-	 * @param files
-	 *            the collection of area tree XML files
-	 * @param pdffile
-	 *            the target PDF file
-	 * @throws IOException
-	 *             In case of an I/O problem
-	 * @throws TransformerException
-	 *             In case of a XSL transformation problem
-	 * @throws SAXException
-	 *             In case of an XML-related problem
-	 */
-	public void concatToPDF(Collection<File> files, File pdffile) throws IOException {
-		// Setup output
-		OutputStream out = new BufferedOutputStream(new FileOutputStream(pdffile));
-		concatToPDF(files, out);
-	}
-	
 	/**
 	 * Concatenates an array of area tree XML files to a single PDF file.
 	 * 

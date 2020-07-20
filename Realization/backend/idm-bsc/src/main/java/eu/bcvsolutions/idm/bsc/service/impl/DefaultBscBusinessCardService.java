@@ -59,6 +59,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 
 	private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(DefaultBscBusinessCardService.class);
 
+	public static String BUSINESS_CARD_DEPARTMENT_EAV_NAME = "businessCardName";
+
 	@Autowired
 	protected IdmIdentityContractService identityContractService;
 	@Autowired
@@ -133,7 +135,7 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 			}
 			if (contractDto != null && contractDto.getWorkPosition() != null) {
 				// get department from eav
-				Optional<IdmFormValueDto> value = formService.getValues(contractDto.getWorkPosition(), IdmTreeNodeDto.class, "businessCardName").stream().findFirst();
+				Optional<IdmFormValueDto> value = formService.getValues(contractDto.getWorkPosition(), IdmTreeNodeDto.class, BUSINESS_CARD_DEPARTMENT_EAV_NAME).stream().findFirst();
 				if (value.isPresent()) {
 					department = value.get().getStringValue();
 				}
@@ -185,6 +187,8 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 			IdmIdentityContractDto mainContract = allValidForDate.stream().filter(IdmIdentityContractDto::isMain).findFirst().orElse(null);
 			if (mainContract != null) {
 				contractId = mainContract.getId().toString();
+			} else {
+				contractId = allValidForDate.get(0).getId().toString();
 			}
 		}
 		String finalContractId = contractId;

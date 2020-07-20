@@ -208,7 +208,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	private RptReportDto finishReport(OperationResult result) throws FileNotFoundException {
 		RptReportDto report = reportService.get(relatedReport);
 		//
-		FileInputStream fis = new FileInputStream(tempFile);
+		FileInputStream fis = new FileInputStream(getTempFile());
 		IdmAttachmentDto attachment = createAttachment(report, fis);
 		report.setData(attachment.getId());
 		report.setResult(result);

@@ -5,7 +5,6 @@ import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.UUID;
 
 import javax.imageio.ImageIO;
 
@@ -50,52 +49,5 @@ public class ImageUtils {
 	public static void writeToFile(BufferedImage bi, String type, String fileName) throws IOException {
 		ImageIO.write(bi, type, new File(fileName));
 	}
-	
-	public static String createBCBackground(Color mainBody, Color cornerTop, 
-			Color cornerBottom, boolean transparent) throws IOException {
-		
-		String fileName = "/tmp/" + UUID.randomUUID().toString() + ".png";
-		createBCBackground(fileName, mainBody, cornerTop, cornerBottom, transparent);
-		return fileName;
-	}
-	
-	public static void createBCBackground(String fileName, Color mainBody, 
-			Color cornerTop, Color cornerBottom, boolean transparent) throws IOException {
-		
-		BufferedImage bi = new BufferedImage(850, 540, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g = bi.createGraphics();
-		
-		g.setColor(cornerTop);
-		g.fillRect(800, 0, 50, 540 / 2);
-		g.setColor(cornerBottom);
-		g.fillRect(800, 540 / 2, 50, 540 / 2);
-		if (!transparent) {
-			g.setColor(mainBody);
-			g.fillRect(0, 0, 800, 540);
-		}
-		g.dispose();
-		
-		int w = bi.getWidth();
-	    int h = bi.getHeight();
-		BufferedImage output = new BufferedImage(850, 540, BufferedImage.TYPE_INT_ARGB);
-	    Graphics2D g2 = output.createGraphics();
-	    g2.setComposite(AlphaComposite.Src);
-	    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-	    g2.setColor(Color.WHITE);
-	    g2.fill(new RoundRectangle2D.Float(0, 0, w, h, 75, 75));
-	    
-	    g2.setComposite(AlphaComposite.SrcAtop);
-	    g2.drawImage(bi, 0, 0, null);
-		
-		if (transparent) {
-			g2.setComposite(AlphaComposite.Src);
-			g2.setColor(mainBody);
-			g2.fillRect(0, 0, 800, 540);
-		}
-	   g2.dispose();
-
-		writeToFile(output, "png", fileName);
-	}
-	
 
 }
