@@ -164,7 +164,7 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	public BscBusinessCardDto getBusinessCard(String identity, String date, String contractId) {
 		IdmIdentityDto idmIdentityDto = getIdentity(identity);
 		LocalDate localDate = LocalDate.parse(date);
-		List<IdmIdentityContractDto> allValidForDate = identityContractService.findAllValidForDate(idmIdentityDto.getId(), localDate, false);
+		List<IdmIdentityContractDto> allValidForDate = identityContractService.findAllValidForDate(idmIdentityDto.getId(), localDate, Boolean.FALSE);
 		allValidForDate.sort(Comparator.comparing(IdmIdentityContractDto::getPosition));
 		Map<String, IdmIdentityContractDto> contracts = new LinkedHashMap<>();
 		allValidForDate.forEach(idmIdentityContractDto -> contracts.put(idmIdentityContractDto.getId().toString(), idmIdentityContractDto));

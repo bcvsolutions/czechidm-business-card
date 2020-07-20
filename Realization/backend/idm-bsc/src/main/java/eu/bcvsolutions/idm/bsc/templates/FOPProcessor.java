@@ -224,28 +224,33 @@ public class FOPProcessor extends TemplateProcessor {
 		if (name == null)
 			return "";
 		if (obj == null)
-			return "<" + name.toString() + "></" + name.toString() + ">\n";
+			return "<" + name + "></" + name + ">\n";
 		if (obj instanceof Map)
 			return mapToXml(name, (Map<Object, Object>) obj);
 		if (obj instanceof Collection)
 			return collToXml(name, (Collection<?>) obj);
-		return "<" + name + ">" + obj + "</" + name.toString() + ">\n";
+		return "<" + name + ">" + obj + "</" + name + ">\n";
 	}
 
 	protected <E> String collToXml(String name, Collection<E> obj) {
-		String out = "";
+		StringBuilder builder = new StringBuilder();
 		for (Object o : obj) {
-			out = out + valueToString(name, o);
+			builder.append(valueToString(name, o));
 		}
-		return out;
+		return builder.toString();
 	}
 
 	protected String mapToXml(String name, Map<Object, Object> obj) {
-		String out = "<" + name + ">\n";
+		StringBuilder builder = new StringBuilder();
+		builder.append('<');
+		builder.append(name);
+		builder.append(">\n");
 		for (Map.Entry<Object, Object> entry : obj.entrySet()) {
-			out = out + valueToString(entry.getKey().toString(), entry.getValue());
+			builder.append(valueToString(entry.getKey().toString(), entry.getValue()));
 		}
-		out = out + "</" + name + ">\n";
-		return out;
+		builder.append("</");
+		builder.append(name);
+		builder.append(">\n");
+		return builder.toString();
 	}
 }

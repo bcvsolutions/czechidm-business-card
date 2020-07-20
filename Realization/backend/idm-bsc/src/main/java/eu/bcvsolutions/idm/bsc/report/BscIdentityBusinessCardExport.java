@@ -160,8 +160,8 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	@Override
 	protected OperationResult end(OperationResult result, Exception ex) {
 		// Save pdf to disk
-		Boolean saveToHdd = (Boolean) getProperties().getOrDefault(SAVE_TO_HDD_CODE, false);
-		if (saveToHdd != null && saveToHdd) {
+		boolean saveToHdd = (Boolean) getProperties().getOrDefault(SAVE_TO_HDD_CODE, false);
+		if (saveToHdd) {
 			LOG.info("Save to disk");
 			saveToHdd();
 		}
@@ -303,7 +303,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 		if (!StringUtils.isBlank(savePath)) {
 			filePath.append(savePath);
 			filePath.append(personalNumber);
-			filePath.append("_");
+			filePath.append('_');
 			filePath.append(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss")));
 			filePath.append(".pdf");
 			byte[] bytes = null;
