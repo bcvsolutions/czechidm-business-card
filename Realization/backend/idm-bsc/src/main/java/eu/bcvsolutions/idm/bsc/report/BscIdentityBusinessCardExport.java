@@ -160,8 +160,8 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	@Override
 	protected OperationResult end(OperationResult result, Exception ex) {
 		// Save pdf to disk
-		boolean saveToHdd = (Boolean) getProperties().getOrDefault(SAVE_TO_HDD_CODE, false);
-		if (saveToHdd) {
+		Boolean saveToHdd = (Boolean) getProperties().getOrDefault(SAVE_TO_HDD_CODE, Boolean.FALSE);
+		if (saveToHdd != null && saveToHdd) {
 			LOG.info("Save to disk");
 			saveToHdd();
 		}
