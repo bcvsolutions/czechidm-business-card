@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>eu.bcvsolutions.idm</groupId>
 		<artifactId>idm-parent</artifactId>
-		<version>10.3.3</version>
+		<version>10.5.0</version>
 	</parent>
 
 	<artifactId>idm-business-card</artifactId>
@@ -18,7 +18,7 @@
 	<description>CzechIdM Module for Business card</description>
 
 	<properties>
-		<czechidm-version>10.3.3</czechidm-version>
+		<czechidm-version>10.5.0</czechidm-version>
 	</properties>
 
 	<repositories>

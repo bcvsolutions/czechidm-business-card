@@ -74,10 +74,6 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	public static final String SAVE_TO_HDD_CODE = "save-to-hdd";
 	public static final String BUSINESS_CARD_CODE = "business-card";
 
-	private final RptReportService reportService;
-	private final AttachmentManager attachmentManager;
-	private final ObjectMapper mapper;
-
 	//
 	private File tempFile;
 	private JsonGenerator jsonGenerator;
@@ -95,13 +91,12 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	private BscBusinessCardService businessCardService;
 	@Autowired
 	private FOPProcessor fopProcessor;
-
-	public BscIdentityBusinessCardExport(RptReportService reportService,
-										 AttachmentManager attachmentManager, ObjectMapper mapper) {
-		this.reportService = reportService;
-		this.attachmentManager = attachmentManager;
-		this.mapper = mapper;
-	}
+	@Autowired
+	private RptReportService reportService;
+	@Autowired
+	private AttachmentManager attachmentManager;
+	@Autowired
+	private ObjectMapper mapper;
 
 	@Override
 	protected boolean start() {
@@ -199,7 +194,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 	private JsonGenerator getJsonGenerator() throws IOException {
 		if (jsonGenerator == null) {
 			FileOutputStream outputStream = new FileOutputStream(getTempFile());
-			jsonGenerator = getMapper().getFactory().createGenerator(outputStream, JsonEncoding.UTF8);
+			jsonGenerator = mapper.getFactory().createGenerator(outputStream, JsonEncoding.UTF8);
 			jsonGenerator.writeStartArray();
 		}
 		return jsonGenerator;
@@ -235,10 +230,6 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 		} catch (IOException e) {
 			return false;
 		}
-	}
-
-	private ObjectMapper getMapper() {
-		return this.mapper;
 	}
 
 	private File getTempFile() {
