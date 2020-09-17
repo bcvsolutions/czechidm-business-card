@@ -43,4 +43,9 @@ public class DefaultBscConfiguration
 	public String getFopConfigPath() {
 		return getConfigurationService().getValue(FOP_CONFIG_PATH);
 	}
+
+	@Override
+	public String getImageFileExtension() {
+		return getConfigurationService().getValue(IMAGE_FILE_EXTENSION);
+	}
 }

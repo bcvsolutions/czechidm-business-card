@@ -351,16 +351,17 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	protected void makeRoundCorners(Map<String, Object> params, String fileIdentifier) {
 		// round corners
 		String imagePath = bscConfiguration.getImagePath();
+		String imageFileExtension = bscConfiguration.getImageFileExtension();
 		String tmpPath = bscConfiguration.getTmpPath();
 		String randTmp;
 		if (!StringUtils.isBlank(imagePath) && !StringUtils.isBlank(tmpPath)) {
 			try {
 				if (!StringUtils.isBlank(fileIdentifier)) {
-					imagePath += fileIdentifier + ".png";
+					imagePath += fileIdentifier + "." + imageFileExtension;
 				}
-				randTmp = tmpPath + UUID.randomUUID().toString() + ".png";
+				randTmp = tmpPath + UUID.randomUUID().toString() + "." + imageFileExtension;
 				ImageUtils.writeToFile(
-						ImageUtils.makeRoundedCorner(ImageUtils.readFromFile(imagePath), 40), "png", randTmp);
+						ImageUtils.makeRoundedCorner(ImageUtils.readFromFile(imagePath), 40), imageFileExtension, randTmp);
 				params.put("imagePath", randTmp);
 			} catch (IOException e) {
 				LOG.warn("Can not load image", e);

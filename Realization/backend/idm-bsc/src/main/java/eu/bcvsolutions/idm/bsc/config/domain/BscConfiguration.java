@@ -27,6 +27,7 @@ public interface BscConfiguration extends Configurable, ScriptEnabled {
 	String TMP_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "tmp.path";
 	String TEMPLATE_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "template.path";
 	String FOP_CONFIG_PATH = PRIVATE_PREFIX_CONFIGURATION_BSC + "fop.config.path";
+	String IMAGE_FILE_EXTENSION = PRIVATE_PREFIX_CONFIGURATION_BSC + "image.file.extension";
 
 	String getSavePath();
 
@@ -39,6 +40,8 @@ public interface BscConfiguration extends Configurable, ScriptEnabled {
 	String getTemplatePath();
 
 	String getFopConfigPath();
+
+	String getImageFileExtension();
 
 	@Override
 	default String getConfigurableType() {
