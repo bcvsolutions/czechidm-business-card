@@ -232,7 +232,7 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	@Override
 	public Map<String, Object> prepareAndTransformData(BscBusinessCardDto dto, IdmIdentityDto identityDto) {
 		Map<String, Object> params = transformAttrsToMap(dto);
-		makeRoundCorners(params, identityDto);
+		makeRoundCorners(params, identityDto.getExternalCode());
 
 		params.put("nameSize", ((String) params.getOrDefault(nameAttrName, "") + params.getOrDefault(titlesAfterAttrName, "") +
 				params.getOrDefault(titlesBeforeAttrName, "")).length() > 38 ? "8.6pt" : "11pt");
@@ -346,17 +346,17 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	 * It will make round corners of the user's photo for business card
 	 *
 	 * @param params      Map with params, it will add new param with the rounded image
-	 * @param identityDto User for which we want to round the image
+	 * @param fileIdentifier identifier of the file with picture for user e.g external number, username, ...
 	 */
-	protected void makeRoundCorners(Map<String, Object> params, IdmIdentityDto identityDto) {
+	protected void makeRoundCorners(Map<String, Object> params, String fileIdentifier) {
 		// round corners
 		String imagePath = bscConfiguration.getImagePath();
 		String tmpPath = bscConfiguration.getTmpPath();
 		String randTmp;
 		if (!StringUtils.isBlank(imagePath) && !StringUtils.isBlank(tmpPath)) {
 			try {
-				if (!StringUtils.isBlank(identityDto.getExternalCode())) {
-					imagePath += identityDto.getExternalCode() + ".png";
+				if (!StringUtils.isBlank(fileIdentifier)) {
+					imagePath += fileIdentifier + ".png";
 				}
 				randTmp = tmpPath + UUID.randomUUID().toString() + ".png";
 				ImageUtils.writeToFile(
