@@ -354,14 +354,15 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		String imageFileExtension = bscConfiguration.getImageFileExtension();
 		String tmpPath = bscConfiguration.getTmpPath();
 		String randTmp;
-		if (!StringUtils.isBlank(imagePath) && !StringUtils.isBlank(tmpPath)) {
+		if (!StringUtils.isBlank(imagePath) && !StringUtils.isBlank(tmpPath) && !StringUtils.isBlank(imageFileExtension)) {
 			try {
 				if (!StringUtils.isBlank(fileIdentifier)) {
 					imagePath += fileIdentifier + "." + imageFileExtension;
 				}
 				randTmp = tmpPath + UUID.randomUUID().toString() + "." + imageFileExtension;
+				// Saving as png, because jpg is not supported.
 				ImageUtils.writeToFile(
-						ImageUtils.makeRoundedCorner(ImageUtils.readFromFile(imagePath), 40), imageFileExtension, randTmp);
+						ImageUtils.makeRoundedCorner(ImageUtils.readFromFile(imagePath), 40), "png", randTmp);
 				params.put("imagePath", randTmp);
 			} catch (IOException e) {
 				LOG.warn("Can not load image", e);
