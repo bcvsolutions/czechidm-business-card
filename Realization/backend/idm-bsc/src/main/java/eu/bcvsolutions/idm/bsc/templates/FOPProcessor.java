@@ -1,21 +1,21 @@
 /**
  * CzechIdM
  * Copyright (C) 2015 BCV solutions s.r.o., Czech Republic
- * 
+ * <p>
  * This software is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License 2.1 as published by the Free Software Foundation;
- * 
+ * <p>
  * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
- * 
+ * <p>
  * You should have received a copy of the GNU Lesser General Public
- * License along with this software; if not, write to the Free 
- * Software Foundation, Inc., 51 Franklin Street, Fifth Floor, 
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA 02110-1301 USA
- * 
+ * <p>
  * You can contact us on website http://www.bcvsolutions.eu.
  */
 
@@ -62,16 +62,16 @@ import eu.bcvsolutions.idm.core.api.exception.CoreException;
 public class FOPProcessor extends TemplateProcessor {
 	protected static FOPProcessor instance = null;
 
-	protected static HashMap<String, String> formats = new HashMap<String, String>() {
-		{
-			put("PDF", MimeConstants.MIME_PDF);
-			put("PNG", MimeConstants.MIME_PNG);
-			put("TXT", MimeConstants.MIME_PLAIN_TEXT);
-			put("PS", MimeConstants.MIME_POSTSCRIPT);
-			put("PCL", MimeConstants.MIME_PCL);
-			put("RTF", MimeConstants.MIME_RTF);
-		}
-	};
+	protected static HashMap<String, String> formats = new HashMap<>();
+
+	static {
+		formats.put("PDF", MimeConstants.MIME_PDF);
+		formats.put("PNG", MimeConstants.MIME_PNG);
+		formats.put("TXT", MimeConstants.MIME_PLAIN_TEXT);
+		formats.put("PS", MimeConstants.MIME_POSTSCRIPT);
+		formats.put("PCL", MimeConstants.MIME_PCL);
+		formats.put("RTF", MimeConstants.MIME_RTF);
+	}
 
 	private final BscConfiguration bscConfiguration;
 
@@ -111,15 +111,15 @@ public class FOPProcessor extends TemplateProcessor {
 		String templateContent = getTemplateContent();
 		return convertToAreaTreeXML(params, templateContent);
 	}
-	
+
 	public File convertToAreaTreeXML(Map<String, Object> params, String templateContent) throws IOException {
 		return convertToAreaTreeXML(valueToString("params", params), templateContent);
 	}
-	
+
 	/**
 	 * Converts an XSL-FO document to an area tree XML file of PDF type.
 	 * Calling this method directly is useful mainly for testing and prototyping.
-	 * 
+	 *
 	 * @param xml template variables
 	 * @param templateContent template content as raw string
 	 * @return Path to area tree XML file
@@ -176,7 +176,7 @@ public class FOPProcessor extends TemplateProcessor {
 
 	/**
 	 * Concatenates an array of area tree XML files to a single PDF file.
-	 * 
+	 *
 	 * @param files
 	 *            the collection of area tree XML files
 	 * @throws IOException
@@ -212,7 +212,7 @@ public class FOPProcessor extends TemplateProcessor {
 
 	/**
 	 * Convert given value to string
-	 * 
+	 *
 	 * @param obj
 	 *            - object to string
 	 * @param name

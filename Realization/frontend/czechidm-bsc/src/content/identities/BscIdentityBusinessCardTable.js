@@ -20,7 +20,7 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
   constructor(props, context) {
     super(props, context);
     const {entityId} = this.props;
-    this.setState({showLoading: true, longRunningTask: null});
+    this.setState({showLoading: true, longRunningTask: null, hideFields: false});
     this.context.store.dispatch(businessCardManager.fetchBackendForDate(entityId, moment().format('YYYY-MM-DD'), uiKey, (card, error) => {
       if (!error) {
         this.setState({formInstanceKey: uuid.v1(), showLoading: false})
@@ -85,7 +85,7 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
     if (event) {
       event.preventDefault();
     }
-    this.setState({showLoading: true});
+    this.setState({showLoading: true, hideFields: false});
     if (date) {
       const entity = this.refs.form.getData();
       const {entityId, businessCardEntity} = this.props;
@@ -97,6 +97,8 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
           }
         }));
       }
+    } else {
+      this.setState({hideFields: true, showLoading: false});
     }
   }
 
@@ -112,7 +114,7 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
 
   render() {
     const {uiKey, _permissions, businessCardEntity} = this.props;
-    const {formInstanceKey, longRunningTask, showLoading} = this.state;
+    const {formInstanceKey, longRunningTask, showLoading, hideFields} = this.state;
     let formInstance = new Domain.FormInstance({});
     let options = [];
     if (businessCardEntity) {
@@ -162,13 +164,15 @@ class BscIdentityBusinessCardTable extends Advanced.AbstractTableContent {
                   onChange={this.onContractChange.bind(this)}
                   label={this.i18n('contract')}
                   required
-                  clearable={false}/>
+                  clearable={false}
+                  readOnly={hideFields}/>
               <Basic.Panel showLoading={showLoading} className="no-border no-margin">
                 <Advanced.EavForm
                     ref="formInstance"
                     key={uuid.v1()}
                     formInstance={formInstance}
-                    useDefaultValue={false}/>
+                    useDefaultValue={false}
+                    rendered={!hideFields}/>
               </Basic.Panel>
             </Basic.Col>
           </Basic.AbstractForm>

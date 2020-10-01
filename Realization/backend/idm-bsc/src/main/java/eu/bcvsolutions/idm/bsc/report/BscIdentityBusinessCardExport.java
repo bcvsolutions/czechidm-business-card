@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import eu.bcvsolutions.idm.bsc.config.domain.BscConfiguration;
-import eu.bcvsolutions.idm.bsc.domain.BscGroupPermission;
 import eu.bcvsolutions.idm.bsc.dto.BscBusinessCardDto;
 import eu.bcvsolutions.idm.bsc.service.api.BscBusinessCardService;
 import eu.bcvsolutions.idm.bsc.templates.FOPProcessor;
@@ -52,6 +51,7 @@ import eu.bcvsolutions.idm.core.eav.api.dto.IdmFormAttributeDto;
 import eu.bcvsolutions.idm.core.ecm.api.dto.IdmAttachmentDto;
 import eu.bcvsolutions.idm.core.ecm.api.entity.AttachableEntity;
 import eu.bcvsolutions.idm.core.ecm.api.service.AttachmentManager;
+import eu.bcvsolutions.idm.core.model.domain.CoreGroupPermission;
 import eu.bcvsolutions.idm.core.scheduler.api.dto.IdmLongRunningTaskDto;
 import eu.bcvsolutions.idm.core.security.api.domain.Enabled;
 import eu.bcvsolutions.idm.rpt.api.dto.RptReportDto;
@@ -275,7 +275,7 @@ public class BscIdentityBusinessCardExport extends AbstractBulkAction<IdmIdentit
 
 	@Override
 	protected List<String> getAuthoritiesForEntity() {
-		return Lists.newArrayList(BscGroupPermission.BSC_BUSINESS_CARD_ADMIN);
+		return Lists.newArrayList(CoreGroupPermission.IDENTITY_READ);
 	}
 
 	@Override
