@@ -1,0 +1,86 @@
+{
+  "module": {
+    "name": "CzechIdM Module for Business card",
+    "author": "BCV solutions s.r.o."
+  },
+  "content": {
+    "business-card": {
+      "label": "Business card",
+      "title": "Business card",
+      "date": "Date, for which are contracts valid",
+      "contract": "Contracts",
+      "contract-nice-label": "{{position}} - Valid from: {{validFrom}} Valid till: {{validTill}}",
+      "button": {
+        "generate": "Create business card",
+        "edit": "Edit record"
+      },
+      "generate": {
+        "header": "Creation of business card",
+        "message": "Do you really want to create business card?"
+      }
+    },
+    "identity": {
+      "business-card": {
+        "header": "Business card",
+        "title": "Business card"
+      }
+    }
+  },
+  "eav": {
+    "bulk-action": {
+      "bsc-identity-business-card-bulk-action": {
+        "label": "Generate business card",
+        "help": "It will generate business card for selected users",
+        "icon": "fa:address-card-o",
+        "attributes": {
+          "save-to-hdd": {
+            "label": "Save to shared drive",
+            "help": "It will save pdf also to shared drive."
+          }
+        }
+      }
+    },
+    "eu-bcvsolutions-idm-bsc-dto-bscbusinesscarddto": {
+      "bsc": {
+        "attributes": {
+          "name": {
+            "label": "Full name"
+          },
+          "titlesbefore": {
+            "label": "Titles before name"
+          },
+          "titlesafter": {
+            "label": "Titles after name"
+          },
+          "department": {
+            "label": "Department"
+          },
+          "departmentbutton": {
+            "label": "Edit department for all"
+          },
+          "position": {
+            "label": "Position"
+          },
+          "personalnumber": {
+            "label": "Personal number"
+          },
+          "savetohdd": {
+            "label": "Save to shared drive"
+          }
+        }
+      }
+    }
+  },
+  "validation": {
+    "org": {
+      "eav": {
+        "error": "Text can have 4 rows max."
+      }
+    }
+  },
+  "permission": {
+    "group": {
+      "BUSINESSCARD": "Business cards"
+    }
+  }
+}

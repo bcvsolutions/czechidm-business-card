@@ -1,0 +1,86 @@
+{
+  "module": {
+    "name": "CzechIdM Module for Business card",
+    "author": "BCV solutions s.r.o."
+  },
+  "content": {
+    "business-card": {
+      "label": "Vizitky",
+      "title": "Vizitky",
+      "date": "Datum, ke kterému jsou úvazky platné",
+      "contract": "Úvazky",
+      "contract-nice-label": "{{position}} - Platnost od: {{validFrom}} Platnost do: {{validTill}}",
+      "button": {
+        "generate": "Vytvořit vizitku",
+        "edit": "Editovat záznam"
+      },
+      "generate": {
+        "header": "Tvorba vizitky",
+        "message": "Opravdu chcete vytvořit vizitku?"
+      }
+    },
+    "identity": {
+      "business-card": {
+        "header": "Vizitky",
+        "title": "Vizitky"
+      }
+    }
+  },
+  "eav": {
+    "bulk-action": {
+      "bsc-identity-business-card-bulk-action": {
+        "label": "Generovat vizitky",
+        "help": "Vygeneruje vizitky pro vybrané uživatele",
+        "icon": "fa:address-card-o",
+        "attributes": {
+          "save-to-hdd": {
+            "label": "Uložit na sdílený disk",
+            "help": "Pdf bude také uloženo na sdílený disk."
+          }
+        }
+      }
+    },
+    "eu-bcvsolutions-idm-bsc-dto-bscbusinesscarddto": {
+      "bsc": {
+        "attributes": {
+          "name": {
+            "label": "Celé jméno"
+          },
+          "titlesbefore": {
+            "label": "Tituly před jménem"
+          },
+          "titlesafter": {
+            "label": "Tituly za jménem"
+          },
+          "department": {
+            "label": "Oddělení"
+          },
+          "departmentbutton": {
+            "label": "Editovat oddělení pro všechny"
+          },
+          "position": {
+            "label": "Pozice"
+          },
+          "personalnumber": {
+            "label": "Osobní číslo"
+          },
+          "savetohdd": {
+            "label": "Uložit na sdílený disk"
+          }
+        }
+      }
+    }
+  },
+  "validation": {
+    "org": {
+      "eav": {
+        "error": "Text může mít maximálně 4 řádky."
+      }
+    }
+  },
+  "permission": {
+    "group": {
+      "BUSINESSCARD": "Vizitky"
+    }
+  }
+}
