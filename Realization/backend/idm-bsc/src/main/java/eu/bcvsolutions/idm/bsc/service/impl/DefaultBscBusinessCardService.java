@@ -6,7 +6,6 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -165,7 +164,20 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 		IdmIdentityDto idmIdentityDto = getIdentity(identity);
 		LocalDate localDate = LocalDate.parse(date);
 		List<IdmIdentityContractDto> allValidForDate = identityContractService.findAllValidForDate(idmIdentityDto.getId(), localDate, Boolean.FALSE);
-		allValidForDate.sort(Comparator.comparing(IdmIdentityContractDto::getPosition));
+		allValidForDate.sort((o1, o2) -> {
+			int result;
+			if (o1.getPosition() == null && o2.getPosition() != null) {
+				result = 1;
+			} else if (o1.getPosition() != null && o2.getPosition() == null) {
+				result = -1;
+			} else if (o1.getPosition() == null && o2.getPosition() == null) {
+				result = 0;
+			} else {
+				result = o1.getPosition().compareTo(o2.getPosition());
+			}
+			return result;
+		});
+
 		Map<String, IdmIdentityContractDto> contracts = new LinkedHashMap<>();
 		allValidForDate.forEach(idmIdentityContractDto -> contracts.put(idmIdentityContractDto.getId().toString(), idmIdentityContractDto));
 
@@ -345,7 +357,7 @@ public class DefaultBscBusinessCardService implements BscBusinessCardService {
 	/**
 	 * It will make round corners of the user's photo for business card
 	 *
-	 * @param params      Map with params, it will add new param with the rounded image
+	 * @param params         Map with params, it will add new param with the rounded image
 	 * @param fileIdentifier identifier of the file with picture for user e.g external number, username, ...
 	 */
 	protected void makeRoundCorners(Map<String, Object> params, String fileIdentifier) {
